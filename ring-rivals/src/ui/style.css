@@ -395,6 +395,8 @@ body {
 .game-topbar { display:flex; align-items:center; justify-content:space-between; padding: 0 2.5%; background:#161d31; border-bottom:3px solid #bd5039; letter-spacing:.08em; }
 .brand-mark { color:var(--gold); font-weight:900; font-size:clamp(13px,2vw,24px); }
 .brand-mark span { color:#fff0c2; font-size:.7em; margin-left:.5em; }
+.topbar-actions { display:flex; align-items:center; gap:.5em; }
+.topbar-actions button { padding:.35em .55em; font-size:clamp(7px,.8vw,10px); }
 .room-status { font-size:clamp(8px,1vw,13px); color:#91d4b0; }
 .mute-button { background:transparent!important; box-shadow:none!important; font-size:clamp(8px,1vw,12px); }
 .ring-stage { position:relative; isolation:isolate; overflow:hidden; background:linear-gradient(#2c4962 0 43%,#40404e 43% 68%,#b66d44 68% 100%); }

@@ -1,5 +1,4 @@
-// Change these presets to update the template's supported aspect ratios in one place.
-// Layout dimensions are CSS pixels; renderer resolution and DPR belong to a future integration.
+// The game uses a fixed landscape presentation; browser surfaces preserve this ratio.
 export const aspectRatioPresets = Object.freeze({
   landscape: Object.freeze({ width: 16, height: 9, label: "16:9" }),
 });

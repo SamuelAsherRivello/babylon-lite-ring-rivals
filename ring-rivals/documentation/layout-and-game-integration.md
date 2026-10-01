@@ -14,7 +14,7 @@ The local client predicts dodge pose immediately from the player's input. It onl
 
 The client uses `https://rmc-colyseus-multiplayer-server.vercel.app` unless `VITE_MULTIPLAYER_ENDPOINT` overrides the endpoint for development. The server package and its room protocol are documented in the multiplayer server's `@rmc/multiplayer-client` release README. Two clients share a six-character private room code, independently select either original boxer, and ready before the match begins. A round lasts 60 seconds; the server pauses the clock while a disconnected player attempts same-seat recovery for up to 15 seconds.
 
-Controls work with keyboard (`Z`, `X`, `A`, `S`, arrows) and touch action buttons. Focus loss sends neutral input. Six generated Web Audio cues are event-driven; the UI mute control and `?mute=1` support silent play. The experience includes no music.
+Controls work with keyboard (`Z`, `X`, `A`, `S`, arrows), touch action buttons, and standard gamepad face/shoulder/D-pad or left-stick inputs. Focus loss sends neutral input. Six generated Web Audio cues are event-driven; the UI mute control and `?mute=1` support silent play. The experience includes no music.
 
 ## Pixel presentation
 

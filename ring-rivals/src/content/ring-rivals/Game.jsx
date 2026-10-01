@@ -176,7 +176,36 @@ export function RingRivalsGame() {
     };
     window.addEventListener("keyup", releaseAction);
     window.addEventListener("blur", neutralize);
-    return () => { window.removeEventListener("keydown", handleKey); window.removeEventListener("keyup", releaseAction); window.removeEventListener("blur", neutralize); };
+    const gamepadHeld = new Set();
+    const gamepadActions = [[0, "jab-head"], [1, "cross-head"], [2, "jab-body"], [3, "cross-body"], [4, "guard-low"], [5, "guard-high"], [12, "guard-high"], [13, "guard-low"], [14, "dodge-left"], [15, "dodge-right"]];
+    const guardButtons = new Set([4, 5, 12, 13]);
+    const pollGamepads = () => {
+      const gamepad = navigator.getGamepads?.().find(Boolean);
+      if (gamepad) {
+        const active = new Set();
+        for (const [index, action] of gamepadActions) {
+          if (gamepad.buttons[index]?.pressed) active.add(index);
+        }
+        const xAxis = gamepad.axes[0] ?? 0;
+        const yAxis = gamepad.axes[1] ?? 0;
+        if (xAxis < -0.65) active.add(14);
+        if (xAxis > 0.65) active.add(15);
+        if (yAxis < -0.65) active.add(5);
+        if (yAxis > 0.65) active.add(4);
+        for (const index of active) {
+          if (!gamepadHeld.has(index)) sendAction(gamepadActions.find(([button]) => button === index)[1]);
+        }
+        if ([...guardButtons].some((index) => gamepadHeld.has(index) && !active.has(index))) sendAction("neutral");
+        gamepadHeld.clear();
+        active.forEach((button) => gamepadHeld.add(button));
+      } else if (gamepadHeld.size) {
+        if ([...guardButtons].some((index) => gamepadHeld.has(index))) sendAction("neutral");
+        gamepadHeld.clear();
+      }
+      gamepadFrame = requestAnimationFrame(pollGamepads);
+    };
+    let gamepadFrame = requestAnimationFrame(pollGamepads);
+    return () => { cancelAnimationFrame(gamepadFrame); window.removeEventListener("keydown", handleKey); window.removeEventListener("keyup", releaseAction); window.removeEventListener("blur", neutralize); };
   }, [state.status]);
 
   const sendAction = (action) => {
@@ -197,18 +226,16 @@ export function RingRivalsGame() {
   };
   const localSeat = state.players.find((player) => player.id === state.sessionId)?.seat;
   const myFighter = localSeat == null ? null : state.gameState?.players?.[localSeat];
-  const activeRoom = state.status === "connected" && state.gameState;
   const selectBoxer = (value) => { setBoxer(value); sessionRef.current?.send("select", { boxer: value }); };
 
   return <main className="game-shell">
-    <header className="game-topbar"><div className="brand-mark">RR <span>RING RIVALS</span></div><div className="room-status">{state.status === "connected" ? `ONLINE · ${state.code || state.roomId || "PRIVATE BOUT"}` : state.status.toUpperCase()}</div><button className="mute-button" onClick={() => { setMuted((current) => { const next = !current; const url = new URL(location.href); if (next) url.searchParams.set("mute", "1"); else url.searchParams.delete("mute"); history.replaceState(null, "", url); return next; }); }} aria-pressed={muted}>{muted ? "SOUND OFF" : "SOUND ON"}</button></header>
+    <header className="game-topbar"><div className="brand-mark">RR <span>RING RIVALS</span></div><div className="room-status">{state.status === "connected" ? `ONLINE · ${state.code || state.roomId || "PRIVATE BOUT"}` : state.status.toUpperCase()}</div><div className="topbar-actions">{state.status === "connected" && <button onClick={() => sessionRef.current?.disconnect()}>LEAVE RING</button>}<button className="mute-button" onClick={() => { setMuted((current) => { const next = !current; const url = new URL(location.href); if (next) url.searchParams.set("mute", "1"); else url.searchParams.delete("mute"); history.replaceState(null, "", url); return next; }); }} aria-pressed={muted}>{muted ? "SOUND OFF" : "SOUND ON"}</button></div></header>
     <FighterStage state={state} sessionId={state.sessionId} localIntent={localIntent} />
     <section className="game-controls">
-      {!activeRoom ? <div className="lobby-card"><p className="eyebrow">ONLINE ARCADE BOXING · 2 PLAYERS</p><h1>STEP INTO THE RING</h1><p>Create a private bout, then send the room code to your rival.</p>
+      {state.status !== "connected" ? <div className="lobby-card"><p className="eyebrow">ONLINE ARCADE BOXING · 2 PLAYERS</p><h1>STEP INTO THE RING</h1><p>Create a private bout, then send the room code to your rival.</p>
         <div className="lobby-actions"><button onClick={() => connect(true)}>CREATE PRIVATE ROOM</button><label>ROOM CODE<input value={invite} onChange={(event) => setInvite(event.target.value.toUpperCase().slice(0, 6))} maxLength={6} placeholder="6 LETTER CODE" /></label><button disabled={invite.trim().length !== 6} onClick={() => connect(false)}>JOIN BOUT</button></div>
         {state.error && <p className="connection-error" role="status">{state.error}</p>}
-        {state.status === "connected" && <div className="lobby-ready"><p>ROOM {state.code || state.roomId} · {state.players.length}/2 BOXERS</p><div className="boxer-select"><button className={boxer === "rook" ? "selected" : ""} onClick={() => selectBoxer("rook")}>ROOK</button><button className={boxer === "flash" ? "selected" : ""} onClick={() => selectBoxer("flash")}>FLASH</button></div><button disabled={state.players.length < 2 || myFighter?.ready} onClick={() => sessionRef.current?.send("ready")}>{myFighter?.ready ? "WAITING FOR RIVAL…" : "READY TO FIGHT"}</button></div>}
-      </div> : <div className="fight-controls"><div className="move-grid">{ACTIONS.map(([action, title]) => <button key={action} onPointerDown={(event) => { event.preventDefault(); sendAction(action); }} onPointerUp={() => { if (action.startsWith("guard")) sendAction("neutral"); }} onPointerCancel={() => sendAction("neutral")}>{title}</button>)}</div><div className="fight-foot">Keyboard: Z/X head punches · A/S body punches · ↑/↓ guard · ←/→ dodge <button onClick={() => sessionRef.current?.send(state.gameState.phase === "matchover" ? "rematch" : "ready")}>{state.gameState.phase === "matchover" ? "REMATCH" : "READY"}</button></div></div>}
+      </div> : !state.gameState || state.gameState.phase === "lobby" ? <div className="lobby-card"><p className="eyebrow">ROOM {state.code || state.roomId} · {state.players.length}/2 BOXERS</p><h1>CHOOSE YOUR BOXER</h1><p>Share this private room code with your rival.</p><div className="lobby-ready"><div className="boxer-select"><button className={(myFighter?.boxer ?? boxer) === "rook" ? "selected" : ""} onClick={() => selectBoxer("rook")}>ROOK</button><button className={(myFighter?.boxer ?? boxer) === "flash" ? "selected" : ""} onClick={() => selectBoxer("flash")}>FLASH</button></div><button disabled={state.players.length < 2 || myFighter?.ready} onClick={() => sessionRef.current?.send("ready")}>{myFighter?.ready ? "WAITING FOR RIVAL…" : "READY TO FIGHT"}</button></div></div> : <div className="fight-controls"><div className="move-grid">{ACTIONS.map(([action, title]) => <button key={action} onPointerDown={(event) => { event.preventDefault(); sendAction(action); }} onPointerUp={() => { if (action.startsWith("guard")) sendAction("neutral"); }} onPointerCancel={() => sendAction("neutral")}>{title}</button>)}</div><div className="fight-foot">Keyboard: Z/X head punches · A/S body punches · ↑/↓ guard · ←/→ dodge <button onClick={() => sessionRef.current?.send(state.gameState.phase === "matchover" ? "rematch" : "ready")}>{state.gameState.phase === "matchover" ? "REMATCH" : "READY"}</button></div></div>}
     </section>
     <footer className="game-footer">ROOK · COUNTER PUNCHER <span>1–2–3, FIGHT!</span> FLASH · SPEED BOXER</footer>
   </main>;

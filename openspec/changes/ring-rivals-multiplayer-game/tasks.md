@@ -15,7 +15,7 @@
 
 ## 3. Game client
 
-- [ ] 3.1 Implement original two-boxer art and mirrored foreground/opponent presentation with HUD and ring; verify both local seat mappings show the local boxer small from behind and remote boxer large facing them.
+- [x] 3.1 Implement original two-boxer art and mirrored foreground/opponent presentation with HUD and ring; verify both local seat mappings show the local boxer small from behind and remote boxer large facing them.
 - [ ] 3.2 Implement invite-room entry, boxer selection, ready/rematch/leave states and multiplayer connection errors; verify two clients join the same private room and full/invalid codes are visible.
 - [ ] 3.3 Implement combat controls, local movement prediction, timestamped remote snapshot interpolation, smooth correction, touch/gamepad/keyboard input, six event sound effects, mute UI, `?mute=1`, and neutral input on focus loss; verify smooth motion converges to authority, actions/snapshots appear for both clients, and mute works.
 - [ ] 3.4 Implement round timer, score, KO, tied-round draw, match draw/win, disconnect recovery and forfeit UI; verify all endings and reconnection states with two clients.

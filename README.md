@@ -23,6 +23,7 @@ Each screen keeps its own point of view: your boxer appears smaller in the foreg
 - `Up` / `Down`: high / low guard
 - `Left` / `Right`: dodge
 - Touch players can tap the on-screen action buttons.
+- Gamepads use A/B/X/Y for punches, shoulder buttons for guards, and the D-pad or left stick for guarding and dodging.
 
 Matches use best-of-three 60-second rounds. A knockout ends the round; otherwise higher remaining health wins. Equal health draws the round. A dropped client can recover its seat for 15 seconds; the round clock pauses during recovery. Rooms and matches are temporary and may reset during server deployments.
 
