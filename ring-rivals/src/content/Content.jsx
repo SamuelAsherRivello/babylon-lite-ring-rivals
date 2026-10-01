@@ -1,18 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  addSpriteAnimation,
   addSprite2D,
-  attachSpriteAnimationsToRenderer,
   centerSprite2DView,
   createRenderTexture2D,
   createGridSpriteAtlas,
   createSprite2DLayer,
-  createSpriteAnimationManager,
-  createSpriteFrameAnimation,
   createSpriteRenderer,
   createEngine,
   disposeEngine,
-  disposeSpriteAnimationBinding,
   disposeSpriteAtlas,
   disposeSpriteRenderer,
   loadTexture2D,
@@ -23,19 +18,17 @@ import {
   stopEngine,
   updateSprite2D,
 } from "@babylonjs/lite";
-import tileUrl from "./babylon/images/concentric-squares-32.png?url";
-import { contentConfig, getRenderingPolicy, logicalResolution, pixelPerfectOptions, showcaseTileSize } from "./babylon/config.js";
+import boxersUrl from "./ring-rivals/boxers.png?url";
+import arenaUrl from "./ring-rivals/arena.png?url";
+import { contentConfig, getRenderingPolicy, logicalResolution, pixelPerfectOptions } from "./babylon/config.js";
 import { getInitializationMessage } from "./babylon/initialization.js";
 import { getLogicalToRenderScale } from "./babylon/pixel-perfect.js";
 import { createRenderTargetSurfaceView, getRenderResolutionDimensions } from "./babylon/render-resolution.js";
 import { useViewportInfo } from "../ui/ViewportInfoContext.jsx";
 
-const TAU = Math.PI * 2;
-const ROTATION_STEPS = 628;
-const ROTATION_STEP_MS = 50;
-const BACKGROUND = Object.freeze({ r: 1, g: 1, b: 1, a: 1 });
+const BACKGROUND = Object.freeze({ r: 0, g: 0, b: 0, a: 0 });
 
-function PixelPerfectShowcase() {
+function PixelPerfectBoxingScene({ fighters, localSeat }) {
   const { setScale, renderPreset, setRenderResolutionInfo, sceneBorderVisible, processingPaused } = useViewportInfo();
   const hostRef = useRef(null);
   const canvasRef = useRef(null);
@@ -45,6 +38,8 @@ function PixelPerfectShowcase() {
   const engineRef = useRef(null);
   const engineReadyRef = useRef(false);
   const engineRunningRef = useRef(false);
+  const fightersRef = useRef({ fighters, localSeat });
+  const applyBoxersRef = useRef(null);
   const [message, setMessage] = useState("Starting Babylon Lite…");
 
   useEffect(() => {
@@ -59,7 +54,10 @@ function PixelPerfectShowcase() {
     let disposed = false;
     let engine = null;
     let texture = null;
+    let arenaTexture = null;
     let atlas = null;
+    let arenaAtlas = null;
+    let arenaLayer = null;
     let renderTexture = null;
     let presentationAtlas = null;
     let presentationRenderer = null;
@@ -67,10 +65,8 @@ function PixelPerfectShowcase() {
     let renderSurface = null;
     let renderer = null;
     let layer = null;
-    let sprite = null;
     let resizeObserver = null;
     let dprQuery = null;
-    let animationBinding = null;
     let setupFinished = false;
     let failed = false;
 
@@ -84,7 +80,7 @@ function PixelPerfectShowcase() {
       dprQuery.addEventListener("change", handleDprChange, { once: true });
     };
     const updateRenderResolution = () => {
-      if (!engine || !renderer || !host || !canvas || !sprite) return;
+      if (!engine || !renderer || !host || !canvas) return;
       const dpr = window.devicePixelRatio || 1;
       const nativeWidth = Math.max(1, Math.floor(host.clientWidth * dpr));
       const nativeHeight = Math.max(1, Math.floor(host.clientHeight * dpr));
@@ -147,8 +143,11 @@ function PixelPerfectShowcase() {
       // the 2D camera: keep its focus at origin and scale the same logical bounds
       // into each target size. Resolution changes therefore alter raster size,
       // not the title's world position or camera framing.
-      layer.view.zoom = getLogicalToRenderScale(resolved.width, resolved.height, logicalResolution);
+      const zoom = getLogicalToRenderScale(resolved.width, resolved.height, logicalResolution);
+      layer.view.zoom = zoom;
+      arenaLayer.view.zoom = zoom;
       centerSprite2DView(layer.view, 0, 0, resolved.width, resolved.height);
+      centerSprite2DView(arenaLayer.view, 0, 0, resolved.width, resolved.height);
       setScale(resolved.scale);
       setRenderResolutionInfo({
         preset: resolved.preset,
@@ -167,7 +166,7 @@ function PixelPerfectShowcase() {
         if (engineRunningRef.current && engine) stopEngine(engine);
         engineRunningRef.current = false;
         disposeResources();
-        if (!cancelled) setMessage(getInitializationMessage(Boolean(navigator.gpu), error));
+        if (!cancelled) setMessage(`${getInitializationMessage(Boolean(navigator.gpu), error)} ${error?.message ?? error}`);
       }
     };
     function handleDprChange() {
@@ -177,23 +176,27 @@ function PixelPerfectShowcase() {
     const disposeResources = () => {
       if (disposed || !setupFinished) return;
       disposed = true;
-      animationBinding && disposeSpriteAnimationBinding(animationBinding);
       if (renderer) setSpriteRendererTarget(renderer, null);
       if (presentationRenderer) disposeSpriteRenderer(presentationRenderer);
       if (renderer) disposeSpriteRenderer(renderer);
       if (presentationAtlas) disposeSpriteAtlas(presentationAtlas);
       if (atlas) disposeSpriteAtlas(atlas);
+      if (arenaAtlas) disposeSpriteAtlas(arenaAtlas);
       if (renderTexture) releaseTexture(renderTexture);
       if (texture) releaseTexture(texture);
+      if (arenaTexture) releaseTexture(arenaTexture);
       if (engine) disposeEngine(engine);
-      animationBinding = null;
       presentationRenderer = null;
       renderer = null;
       presentationAtlas = null;
       atlas = null;
+      arenaAtlas = null;
+      arenaLayer = null;
       renderTexture = null;
       renderSurface = null;
       texture = null;
+      arenaTexture = null;
+      applyBoxersRef.current = null;
       engine = null;
       engineRef.current = null;
       engineReadyRef.current = false;
@@ -214,7 +217,7 @@ function PixelPerfectShowcase() {
         engine = createdEngine;
         engineRef.current = engine;
 
-        const loadedTexture = await loadTexture2D(engine, tileUrl, pixelPerfectOptions.texture);
+        const loadedTexture = await loadTexture2D(engine, boxersUrl, { ...pixelPerfectOptions.texture, invertY: false, premultiplyAlpha: true });
         if (cancelled) {
           texture = loadedTexture;
           setupFinished = true;
@@ -222,21 +225,52 @@ function PixelPerfectShowcase() {
           return;
         }
         texture = loadedTexture;
+        arenaTexture = await loadTexture2D(engine, arenaUrl, { ...pixelPerfectOptions.texture, invertY: false });
+        if (cancelled) {
+          setupFinished = true;
+          disposeResources();
+          return;
+        }
 
         atlas = createGridSpriteAtlas(texture, {
-          cellWidthPx: showcaseTileSize,
-          cellHeightPx: showcaseTileSize,
-          columns: 1,
+          cellWidthPx: 64,
+          cellHeightPx: 128,
+          columns: 4,
           rows: 1,
           pivot: [0.5, 0.5],
         });
         layer = createSprite2DLayer(atlas, { pivot: [0.5, 0.5] });
-        sprite = addSprite2D(layer, {
-          positionPx: [0, 0],
-          sizePx: [showcaseTileSize, showcaseTileSize],
-          frame: 0,
+        arenaAtlas = createGridSpriteAtlas(arenaTexture, {
+          cellWidthPx: 480, cellHeightPx: 180, columns: 1, rows: 1, pivot: [0.5, 0.5],
         });
-
+        arenaLayer = createSprite2DLayer(arenaAtlas, { pivot: [0.5, 0.5] });
+        addSprite2D(arenaLayer, { positionPx: [0, 0], sizePx: [480, 180], frame: 0 });
+        const actors = [0, 1].map(() => addSprite2D(layer, {
+          positionPx: [0, 0], sizePx: [64, 128], frame: 0,
+        }));
+        const updateBoxers = () => {
+          const { fighters: current, localSeat: ownSeat } = fightersRef.current;
+          const local = ownSeat ?? 0;
+          [1 - local, local].forEach((seat, drawOrder) => {
+            const actor = actors[drawOrder];
+            const local = seat === (ownSeat ?? 0);
+            const fighter = current?.[seat] ?? { boxer: seat === 0 ? "rook" : "flash", action: "idle", displayX: 0 };
+            const frame = (local ? 0 : 2) + (fighter.boxer === "flash" ? 1 : 0);
+            const dodge = fighter.action?.startsWith("dodge-")
+              ? (fighter.action.endsWith("left") ? -14 : 14)
+              : (fighter.displayX ?? 0) * 18;
+            const attacking = fighter.action?.startsWith("attack-");
+            const punch = attacking ? (fighter.action.includes("cross") ? 12 : -8) : 0;
+            updateSprite2D(actor, {
+              positionPx: [dodge + punch, local ? 38 : -28],
+              sizePx: local ? [attacking ? 58 : 52, 104] : [attacking ? 84 : 76, 152],
+              frame,
+              color: fighter.hitFlash ? [1, 0.65, 0.65, 1] : [1, 1, 1, 1],
+            });
+          });
+        };
+        applyBoxersRef.current = updateBoxers;
+        updateBoxers();
         const dpr = window.devicePixelRatio || 1;
         const initialWidth = Math.max(1, Math.floor(host.clientWidth * dpr));
         const initialHeight = Math.max(1, Math.floor(host.clientHeight * dpr));
@@ -248,20 +282,12 @@ function PixelPerfectShowcase() {
         );
         renderSurface = createRenderTargetSurfaceView(engine, initialRenderSize.width, initialRenderSize.height);
         renderer = createSpriteRenderer(renderSurface, {
-          layers: [layer],
+          layers: [arenaLayer, layer],
           clear: true,
           clearValue: BACKGROUND,
         });
         setSpriteRendererTarget(renderer, null);
         registerSpriteRenderer(renderer);
-
-        const animationManager = createSpriteAnimationManager();
-        addSpriteAnimation(animationManager, createSpriteFrameAnimation({
-          setFrame(step) {
-            if (!cancelled && sprite) updateSprite2D(sprite, { rotation: (step / ROTATION_STEPS) * TAU });
-          },
-        }, 0, ROTATION_STEPS - 1, true, ROTATION_STEP_MS));
-        animationBinding = attachSpriteAnimationsToRenderer(renderer, animationManager);
 
         applyRenderResolutionRef.current = updateRenderResolutionSafely;
         updateRenderResolution();
@@ -286,7 +312,7 @@ function PixelPerfectShowcase() {
       } catch (error) {
         failed = true;
         console.error("Babylon Lite content initialization failed:", error);
-        if (!cancelled) setMessage(getInitializationMessage(Boolean(navigator.gpu), error));
+        if (!cancelled) setMessage(`${getInitializationMessage(Boolean(navigator.gpu), error)} ${error?.message ?? error}`);
       } finally {
         setupFinished = true;
         if (cancelled || failed) disposeResources();
@@ -323,8 +349,13 @@ function PixelPerfectShowcase() {
     }
   }, [processingPaused]);
 
+  useEffect(() => {
+    fightersRef.current = { fighters, localSeat };
+    applyBoxersRef.current?.();
+  }, [fighters, localSeat]);
+
   return (
-    <div ref={hostRef} className="babylon_content" data-renderer="babylon-lite" data-content-style="2d">
+      <div ref={hostRef} className="babylon_content" data-renderer="babylon-lite" data-content-style="2d">
       <canvas ref={canvasRef} className="babylon_canvas" aria-hidden="true" />
       {sceneBorderVisible && <div className="babylon_scene_border" aria-hidden="true" />}
       {message && <div className="babylon_content_message" role="status">{message}</div>}
@@ -332,7 +363,7 @@ function PixelPerfectShowcase() {
   );
 }
 
-export function Content() {
+export function Content({ fighters = null, localSeat = 0 }) {
   const renderingPolicy = getRenderingPolicy(contentConfig);
   if (renderingPolicy === "performance-scaled-3d") {
     return (
@@ -345,5 +376,5 @@ export function Content() {
     return <div className="babylon_content babylon_content_message" role="status">Select Babylon Lite with 2D content or add the renderer-specific integration described in the guide.</div>;
   }
 
-  return <PixelPerfectShowcase />;
+  return <PixelPerfectBoxingScene fighters={fighters} localSeat={localSeat} />;
 }

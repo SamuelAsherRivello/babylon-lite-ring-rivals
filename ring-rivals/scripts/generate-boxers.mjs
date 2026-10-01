@@ -1,0 +1,53 @@
+import { writeFile } from "node:fs/promises";
+import { deflateSync } from "node:zlib";
+
+const width = 256, height = 128, rgba = new Uint8Array(width * height * 4);
+const C = { ink:[30,34,47,255], skin:[190,132,94,255], lit:[239,193,139,255], shade:[127,75,63,255],
+  red:[173,53,43,255], red2:[202,73,51,255], blue:[23,103,125,255], blue2:[33,140,151,255],
+  gold:[240,200,74,255], gold2:[255,223,93,255], orange:[215,91,54,255], dark:[103,49,50,255],
+  white:[255,241,206,255], eye:[25,34,51,255], shadow:[17,24,39,150] };
+function put(x,y,col){if(x>=0&&y>=0&&x<width&&y<height)rgba.set(C[col],(y*width+x)*4);}
+function box(x,y,w,h,col){for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)put(xx,yy,col);}
+function oval(cx,cy,rx,ry,col){for(let y=-ry;y<=ry;y++)for(let x=-rx;x<=rx;x++)if(x*x/(rx*rx)+y*y/(ry*ry)<=1)put(cx+x,cy+y,col);}
+function boxer(x,front,flash){
+  const top=flash?"blue":"red", light=flash?"blue2":"red2", shorts=flash?"dark":"orange", belt=flash?"gold2":"gold";
+  oval(x+32,122,24,4,"shadow");
+  box(x+18,93,12,27,shorts);box(x+34,93,12,27,shorts);box(x+16,86,16,9,belt);box(x+33,86,16,9,belt);
+  box(x+13,53,38,39,top);box(x+9,43,46,24,light);box(x+1,42,15,22,"lit");box(x+48,42,15,22,"lit");
+  box(x+1,57,13,7,"shade");box(x+50,57,13,7,"shade");box(x+16,25,32,35,"skin");box(x+12,17,40,18,"ink");
+  box(x+12,28,6,17,"ink");box(x+46,28,6,17,"ink");box(x+0,35,12,7,belt);box(x+52,35,12,7,belt);
+  box(x+0,42,12,11,top);box(x+52,42,12,11,top);box(x+15,56,7,24,light);box(x+42,56,7,24,top);
+  if(front){
+    box(x+14,48,36,12,belt);box(x+26,49,12,11,top);box(x+18,36,10,6,"white");box(x+36,36,10,6,"white");
+    box(x+21,38,6,4,"eye");box(x+37,38,6,4,"eye");box(x+23,48,18,4,"shade");box(x+28,44,8,2,"lit");
+  }else{
+    box(x+8,43,48,8,"ink");box(x+22,58,20,5,"shade");box(x+21,68,22,6,light);box(x+23,75,18,4,top);
+  }
+  box(x+14,89,18,3,belt);box(x+33,89,18,3,belt);
+}
+boxer(0,false,false);boxer(64,false,true);boxer(128,true,false);boxer(192,true,true);
+function crc(bytes){let n=0xffffffff;for(const b of bytes){n^=b;for(let i=0;i<8;i++)n=(n>>>1)^((n&1)?0xedb88320:0);}return(n^0xffffffff)>>>0;}
+function chunk(type,data){const name=Buffer.from(type),body=Buffer.concat([name,data]),out=Buffer.alloc(data.length+12);out.writeUInt32BE(data.length);body.copy(out,4);out.writeUInt32BE(crc(body),data.length+8);return out;}
+const scan=Buffer.alloc(height*(1+width*4));for(let y=0;y<height;y++)Buffer.from(rgba.buffer,y*width*4,width*4).copy(scan,y*(1+width*4)+1);
+const ihdr=Buffer.alloc(13);ihdr.writeUInt32BE(width);ihdr.writeUInt32BE(height,4);ihdr[8]=8;ihdr[9]=6;
+const png=Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk("IHDR",ihdr),chunk("IDAT",deflateSync(scan)),chunk("IEND",Buffer.alloc(0))]);
+await writeFile(new URL("../src/content/ring-rivals/boxers.png",import.meta.url),png);
+
+const stageW=480,stageH=180,stage=new Uint8Array(stageW*stageH*4);
+function stagePixel(x,y,c){if(x<0||y<0||x>=stageW||y>=stageH)return;stage.set(c,(y*stageW+x)*4);}
+function stageRect(x,y,w,h,c){for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)stagePixel(xx,yy,c);}
+const skyTop=[24,38,60,255],skyBottom=[72,104,122,255];
+for(let y=0;y<stageH;y++)for(let x=0;x<stageW;x++){
+  const t=Math.min(y/85,1),c=skyTop.map((v,i)=>Math.round(v+(skyBottom[i]-v)*t));stagePixel(x,y,c);
+}
+stageRect(0,78,stageW,29,[39,43,60,255]);
+for(let x=0;x<stageW;x+=7)stageRect(x,79,3,26,x%3?[51,51,72,255]:[28,36,56,255]);
+stageRect(0,107,stageW,73,[178,109,68,255]);
+stageRect(18,88,444,71,[255,241,206,255]);stageRect(20,90,440,67,[190,79,59,255]);
+stageRect(23,93,434,60,[219,202,157,255]);stageRect(24,96,432,53,[185,129,87,255]);
+for(const y of [103,119,136]){stageRect(22,y,436,2,[255,241,206,255]);stageRect(22,y+2,436,1,[160,54,55,255]);}
+stageRect(18,159,444,3,[108,55,64,255]);
+const stageRows=Buffer.alloc(stageH*(1+stageW*4));for(let y=0;y<stageH;y++)Buffer.from(stage.buffer,y*stageW*4,stageW*4).copy(stageRows,y*(1+stageW*4)+1);
+const stageHeader=Buffer.alloc(13);stageHeader.writeUInt32BE(stageW);stageHeader.writeUInt32BE(stageH,4);stageHeader[8]=8;stageHeader[9]=6;
+const stagePng=Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk("IHDR",stageHeader),chunk("IDAT",deflateSync(stageRows)),chunk("IEND",Buffer.alloc(0))]);
+await writeFile(new URL("../src/content/ring-rivals/arena.png",import.meta.url),stagePng);

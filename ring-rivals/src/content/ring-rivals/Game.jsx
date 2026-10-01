@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MultiplayerClient } from "@rmc/multiplayer-client";
 import { SnapshotInterpolator, predictLocalPose, reconcilePose } from "./motion-smoothing.js";
+import { Content } from "../Content.jsx";
 
 const ENDPOINT = import.meta.env.VITE_MULTIPLAYER_ENDPOINT || "https://rmc-colyseus-multiplayer-server.vercel.app";
 const ACTIONS = [
@@ -32,30 +33,6 @@ function soundCue(kind, muted) {
     oscillator.start(now);
     oscillator.stop(now + duration + 0.02);
   } catch { /* Sound remains optional on devices without Web Audio. */ }
-}
-
-function Boxer({ fighter, foreground, visualX = 0 }) {
-  if (!fighter) return <div className={`fighter-placeholder ${foreground ? "foreground" : "opponent"}`}>WAITING FOR RIVAL</div>;
-  const backView = foreground;
-  const flash = fighter.hitFlash > 0;
-  return <div className={`pixel-boxer ${foreground ? "foreground" : "opponent"} boxer-${fighter.boxer} action-${fighter.action} ${flash ? "hit-flash" : ""}`}
-    style={{ "--fighter-x": `${visualX * (foreground ? 7 : 12)}%` }} aria-label={`${fighter.boxer}, ${foreground ? "your boxer" : "opponent"}`}>
-    <svg viewBox="0 0 100 120" role="img" aria-hidden="true" shapeRendering="crispEdges">
-      <ellipse cx="50" cy="111" rx="32" ry="6" fill="#15212d" opacity=".55" />
-      <path d="M31 83h15v25H31zM55 82h15v26H55z" fill={fighter.boxer === "rook" ? "#d75c35" : "#1a9b9f"} />
-      <path d="M25 58h50v33H25z" fill={fighter.boxer === "rook" ? "#c53d2d" : "#17677d"} />
-      <path d="M18 48h18v17H18zM64 48h18v17H64z" fill="#efc18b" />
-      <path d="M25 42h50v26H25z" fill={fighter.boxer === "rook" ? "#ad352b" : "#13586d"} />
-      <path d="M29 19h42v34H29z" fill="#b97853" />
-      {backView ? <path d="M26 18h48v31H26z" fill="#242836" /> : <>
-        <path d="M27 16h46v12H27z" fill="#242836" />
-        <path d="M35 33h8v5h-8zM57 33h8v5h-8z" fill="#f6ead2" />
-        <path d="M43 45h14v4H43z" fill="#5b2631" />
-      </>}
-      <path d="M18 48h22v15H18zM60 48h22v15H60z" fill="#f2cf42" />
-    </svg>
-    <span className="fighter-name">{fighter.boxer === "rook" ? "ROOK" : "FLASH"}</span>
-  </div>;
 }
 
 function FighterStage({ state, sessionId, localIntent }) {
@@ -103,16 +80,14 @@ function FighterStage({ state, sessionId, localIntent }) {
   const theirFighter = frame?.players?.[1 - mySeat] ?? state.gameState?.players?.[1 - mySeat];
   const visibleMine = myFighter ?? { boxer: "rook", action: "idle", health: 100, stamina: 100, hitFlash: 0 };
   const visibleRival = theirFighter ?? { boxer: "flash", action: "idle", health: 100, stamina: 100, hitFlash: 0 };
+  const renderedFighters = frame?.players ?? [visibleMine, visibleRival];
   return <div className="ring-stage" aria-label="Boxing match">
-    <div className="arena-sky" />
     <div className="arena-scoreboard">
       <div><b>{visibleRival.boxer.toUpperCase()}</b><span>HEALTH {Math.ceil(visibleRival.health ?? 100)}</span><span>STAMINA {Math.ceil(visibleRival.stamina ?? 100)}</span></div>
       <div className="round-clock"><strong>{frame?.roundSeconds ?? 60}</strong><small>ROUND {frame?.round ?? 1} · {frame?.rounds?.[1 - mySeat] ?? 0}–{frame?.rounds?.[mySeat] ?? 0}</small></div>
       <div className="score-right"><b>{visibleMine.boxer.toUpperCase()}</b><span>HEALTH {Math.ceil(visibleMine.health ?? 100)}</span><span>STAMINA {Math.ceil(visibleMine.stamina ?? 100)}</span></div>
     </div>
-    <div className="arena-crowd" />
-    <div className="ring-ropes"><i/><i/><i/></div>
-    <div className="stage-boxers"><Boxer fighter={visibleRival} /><Boxer fighter={visibleMine} foreground visualX={myFighter?.displayX ?? 0} /></div>
+    <Content fighters={renderedFighters} localSeat={frame?.localSeat ?? mySeat} />
     {frame?.phase === "countdown" && <div className="fight-call">{frame.countdown}</div>}
     {frame?.phase === "intermission" && <div className="fight-call">ROUND {frame.round - 1} · {frame.result}</div>}
     {frame?.phase === "matchover" && <div className="fight-call">{frame.result}{frame.winner == null ? " · DRAW" : frame.winner === mySeat ? " · YOU WIN" : " · YOU LOSE"}</div>}
@@ -232,7 +207,8 @@ export function RingRivalsGame() {
     <header className="game-topbar"><div className="brand-mark">RR <span>RING RIVALS</span></div><div className="room-status">{state.status === "connected" ? `ONLINE · ${state.code || state.roomId || "PRIVATE BOUT"}` : state.status.toUpperCase()}</div><div className="topbar-actions">{state.status === "connected" && <button onClick={() => sessionRef.current?.disconnect()}>LEAVE RING</button>}<button className="mute-button" onClick={() => { setMuted((current) => { const next = !current; const url = new URL(location.href); if (next) url.searchParams.set("mute", "1"); else url.searchParams.delete("mute"); history.replaceState(null, "", url); return next; }); }} aria-pressed={muted}>{muted ? "SOUND OFF" : "SOUND ON"}</button></div></header>
     <FighterStage state={state} sessionId={state.sessionId} localIntent={localIntent} />
     <section className="game-controls">
-      {state.status !== "connected" ? <div className="lobby-card"><p className="eyebrow">ONLINE ARCADE BOXING · 2 PLAYERS</p><h1>STEP INTO THE RING</h1><p>Create a private bout, then send the room code to your rival.</p>
+      {state.status === "reconnecting" ? <div className="lobby-card" role="status"><p className="eyebrow">ROOM {state.code || state.roomId}</p><h1>RECOVERING YOUR SEAT</h1><p>{state.error || "The connection dropped. Rejoining your bout…"}</p></div>
+      : state.status !== "connected" ? <div className="lobby-card"><p className="eyebrow">ONLINE ARCADE BOXING · 2 PLAYERS</p><h1>STEP INTO THE RING</h1><p>Create a private bout, then send the room code to your rival.</p>
         <div className="lobby-actions"><button onClick={() => connect(true)}>CREATE PRIVATE ROOM</button><label>ROOM CODE<input value={invite} onChange={(event) => setInvite(event.target.value.toUpperCase().slice(0, 6))} maxLength={6} placeholder="6 LETTER CODE" /></label><button disabled={invite.trim().length !== 6} onClick={() => connect(false)}>JOIN BOUT</button></div>
         {state.error && <p className="connection-error" role="status">{state.error}</p>}
       </div> : !state.gameState || state.gameState.phase === "lobby" ? <div className="lobby-card"><p className="eyebrow">ROOM {state.code || state.roomId} · {state.players.length}/2 BOXERS</p><h1>CHOOSE YOUR BOXER</h1><p>Share this private room code with your rival.</p><div className="lobby-ready"><div className="boxer-select"><button className={(myFighter?.boxer ?? boxer) === "rook" ? "selected" : ""} onClick={() => selectBoxer("rook")}>ROOK</button><button className={(myFighter?.boxer ?? boxer) === "flash" ? "selected" : ""} onClick={() => selectBoxer("flash")}>FLASH</button></div><button disabled={state.players.length < 2 || myFighter?.ready} onClick={() => sessionRef.current?.send("ready")}>{myFighter?.ready ? "WAITING FOR RIVAL…" : "READY TO FIGHT"}</button></div></div> : <div className="fight-controls"><div className="move-grid">{ACTIONS.map(([action, title]) => <button key={action} onPointerDown={(event) => { event.preventDefault(); sendAction(action); }} onPointerUp={() => { if (action.startsWith("guard")) sendAction("neutral"); }} onPointerCancel={() => sendAction("neutral")}>{title}</button>)}</div><div className="fight-foot">Keyboard: Z/X head punches · A/S body punches · ↑/↓ guard · ←/→ dodge <button onClick={() => sessionRef.current?.send(state.gameState.phase === "matchover" ? "rematch" : "ready")}>{state.gameState.phase === "matchover" ? "REMATCH" : "READY"}</button></div></div>}

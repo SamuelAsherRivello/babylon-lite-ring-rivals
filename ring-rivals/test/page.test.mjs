@@ -55,8 +55,8 @@ test('keeps the UI and content source boundaries discoverable', async () => {
     read('documentation/coding-standards.md'),
   ]);
   assert.match(main, /\.\/ui\/App\.jsx/);
-  assert.match(main, /\.\/content\/Content\.jsx/);
-  assert.match(main, /<App content=\{<>.*<Content \/>.*<RingRivalsGame \/>.*<\/>\} \/>/s);
+  assert.match(main, /\.\/content\/ring-rivals\/Game\.jsx/);
+  assert.match(main, /<App content=\{<RingRivalsGame \/>\} \/>/);
   assert.match(template, /export function Template/);
   assert.match(content, /export function Content/);
   assert.match(standards, /src\/ui\//);

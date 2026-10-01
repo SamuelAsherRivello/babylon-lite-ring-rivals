@@ -17,7 +17,7 @@ test('defaults to Babylon Lite 2D and does not apply the pixel preset to 3D', ()
   assert.equal(getRenderingPolicy(contentConfig), 'pixel-perfect');
   assert.equal(getRenderingPolicy({ renderer: 'babylon-lite', style: '3d' }), 'performance-scaled-3d');
   assert.equal(getRenderingPolicy({ renderer: 'other', style: '2d' }), 'renderer-specific');
-  assert.deepEqual(pixelPerfectOptions.engine, { msaaSamples: 1 });
+  assert.deepEqual(pixelPerfectOptions.engine, { msaaSamples: 1, alphaMode: 'premultiplied' });
   assert.deepEqual(pixelPerfectOptions.texture, {
     addressModeU: 'clamp-to-edge',
     addressModeV: 'clamp-to-edge',
@@ -57,15 +57,16 @@ test('derives four relative render resolutions from native backing dimensions an
   ]);
 });
 
-test('keeps the logical camera focus and spinning title at world origin across target sizes', async () => {
-  assert.equal(getLogicalToRenderScale(160, 90), 0.5);
-  assert.equal(getLogicalToRenderScale(320, 180), 1);
-  assert.equal(getLogicalToRenderScale(640, 360), 2);
+test('keeps the logical camera focus and full arena in frame across target sizes', async () => {
+  assert.equal(getLogicalToRenderScale(240, 90), 0.5);
+  assert.equal(getLogicalToRenderScale(480, 180), 1);
+  assert.equal(getLogicalToRenderScale(960, 360), 2);
 
   const content = await readFile(new URL('../src/content/Content.jsx', import.meta.url), 'utf8');
   assert.match(content, /positionPx: \[0, 0\]/);
   assert.match(content, /centerSprite2DView\(layer\.view, 0, 0, resolved\.width, resolved\.height\)/);
-  assert.match(content, /layer\.view\.zoom = getLogicalToRenderScale/);
+  assert.match(content, /const zoom = getLogicalToRenderScale\(resolved\.width, resolved\.height, logicalResolution\)/);
+  assert.match(content, /layers: \[arenaLayer, layer\]/);
   assert.match(content, /setScale\(resolved\.scale\)/);
 });
 
@@ -153,12 +154,13 @@ test('reports WebGPU-only initialization and allocation failures and uses the en
     /disposeSpriteRenderer\(renderer\)/,
     /releaseTexture\(texture\)/,
     /disposeEngine\(engine\)/,
-    /disposeSpriteAnimationBinding\(animationBinding\)/,
+    /disposeSpriteAtlas\(atlas\)/,
   ]) assert.match(content, expression);
   assert.match(content, /await createEngine\(canvas, pixelPerfectOptions\.engine\)/);
+  assert.match(content, /createGridSpriteAtlas\(texture,\s*\{\s*cellWidthPx: 64,\s*cellHeightPx: 128,\s*columns: 4,\s*rows: 1/);
   assert.match(content, /queueMicrotask\(\(\) => \{\s*if \(!cancelled\) void setup\(\);\s*\}\)/);
   assert.match(content, /if \(!navigator\.gpu\) throw new Error\("WebGPU is not available in this browser\."\)/);
-  assert.match(content, /setMessage\(getInitializationMessage\(Boolean\(navigator\.gpu\), error\)\)/);
+  assert.match(content, /setMessage\(`\$\{getInitializationMessage\(Boolean\(navigator\.gpu\), error\)\}/);
   assert.doesNotMatch(content, /\.getContext\(["'](?:2d|webgl2?)["']/i);
   assert.match(content, /await startEngine\(engine\)/);
   assert.match(content, /await startEngine\(engine\);\s*\/\/ StrictMode can unmount this effect while the first async engine start[\s\S]*?if \(cancelled\) return;/);
@@ -202,4 +204,18 @@ test('imports an original 32x32 hard-edged PNG with only black and gray pixels',
     }
   }
   assert.deepEqual([...shades].sort((a, b) => a - b), [0, 64, 128, 192]);
+});
+
+test('ships original pixel boxer and arena atlases at the documented logical size', async () => {
+  const [boxers, arena, config, game] = await Promise.all([
+    readFile(new URL('../src/content/ring-rivals/boxers.png', import.meta.url)),
+    readFile(new URL('../src/content/ring-rivals/arena.png', import.meta.url)),
+    readFile(new URL('../src/content/babylon/config.js', import.meta.url), 'utf8'),
+    readFile(new URL('../src/content/ring-rivals/Game.jsx', import.meta.url), 'utf8'),
+  ]);
+  assert.deepEqual([...boxers.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.deepEqual([boxers.readUInt32BE(16), boxers.readUInt32BE(20)], [256, 128]);
+  assert.deepEqual([arena.readUInt32BE(16), arena.readUInt32BE(20)], [480, 180]);
+  assert.match(config, /logicalResolution = Object\.freeze\(\{ width: 480, height: 180 \}\)/);
+  assert.match(game, /state\.status === "reconnecting"[\s\S]*RECOVERING YOUR SEAT/);
 });
