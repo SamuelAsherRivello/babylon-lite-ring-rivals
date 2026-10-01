@@ -1,0 +1,20 @@
+{
+  "name": "github-repository-template",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test --test-isolation=none project-name/test/page.test.mjs project-name/test/content.test.mjs project-name/test/openspec-skills.test.mjs"
+  },
+  "dependencies": {
+    "@babylonjs/lite": "1.32.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.0"
+  }
+}

@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-10-01
+goal: Render a fixed logical scene into selectable relative WebGPU targets and
+  present with nearest-neighbor scaling.

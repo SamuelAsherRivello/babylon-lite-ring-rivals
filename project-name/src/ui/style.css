@@ -1,0 +1,373 @@
+:root {
+  color-scheme: dark;
+  --gutter-color: #181a1a;
+  --surface-color: #858585;
+  --text-color: #000000;
+  --border-color: #6f6f6f;
+  --viewport-padding: 10px;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+#root {
+  height: 100%;
+}
+
+#browser_surface {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--gutter-color);
+  background-image: url("./assets/gutter-pattern.webp");
+  background-blend-mode: multiply;
+  background-size: 200px 200px;
+}
+
+#viewport {
+  position: absolute;
+  overflow: hidden;
+  container-type: size;
+  background: var(--surface-color);
+  box-shadow: inset 0 0 0 1px var(--border-color);
+}
+
+#content_layer {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+}
+
+.babylon_content {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #ffffff;
+  color: #111111;
+}
+
+.babylon_canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.babylon_scene_border {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  box-sizing: border-box;
+  border: 5px solid orange;
+  pointer-events: none;
+}
+
+.babylon_content_message {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 1rem;
+  text-align: center;
+  font: 500 14px/1.5 system-ui, sans-serif;
+}
+
+.gutter {
+  position: absolute;
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-wrap: anywhere;
+}
+
+.layout_error {
+  padding: 20px;
+  color: var(--text-color);
+  background: var(--gutter-color);
+}
+
+#ui_layer {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  --ui-padding-x: min(var(--viewport-padding), 5cqw);
+  --ui-padding-y: min(var(--viewport-padding), 5cqh);
+  padding: var(--ui-padding-y) var(--ui-padding-x);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.corner {
+  position: absolute;
+  color: var(--text-color);
+  --corner-line-height: 1.15;
+  pointer-events: auto;
+  max-width: 48%;
+  max-height: 48%;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+
+.corner_top_left {
+  top: var(--ui-padding-y);
+  left: var(--ui-padding-x);
+}
+
+.corner_top_right {
+  top: var(--ui-padding-y);
+  right: var(--ui-padding-x);
+}
+
+.corner_bottom_left {
+  bottom: var(--ui-padding-y);
+  left: var(--ui-padding-x);
+}
+
+.corner_bottom_right {
+  right: var(--ui-padding-x);
+  bottom: var(--ui-padding-y);
+}
+
+.corner_top_right,
+.corner_bottom_right {
+  text-align: right;
+}
+
+.corner a,
+.corner a:visited {
+  color: var(--text-color);
+}
+
+.corner-body,
+.corner-title {
+  color: var(--text-color);
+  line-height: var(--corner-line-height, 1.4);
+}
+
+.corner-title {
+  font-size: 10pt;
+  font-weight: 700;
+}
+
+.corner-body {
+  font-size: 8pt;
+  font-weight: 400;
+}
+
+.babylon_viewport_info {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  position: absolute;
+  left: 50%;
+  bottom: 9px;
+  transform: translateX(-50%);
+  color: #e0694b;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.babylon_viewport_logo {
+  align-self: center;
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+.babylon_viewport_info .corner-title,
+.babylon_viewport_info .corner-body {
+  color: inherit;
+  text-align: center;
+}
+
+.babylon_viewport_info_button {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.babylon_viewport_info_button:hover {
+  text-decoration: underline;
+}
+
+.babylon_viewport_info_button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.corner a:hover,
+.corner_option:hover {
+  color: #000000;
+}
+
+.corner_option {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--text-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  font-family: inherit;
+  font-size: 8pt;
+  font-weight: 400;
+  line-height: var(--corner-line-height, 1.4);
+}
+
+.corner_option:focus-visible {
+  outline: 2px solid var(--text-color);
+  outline-offset: 3px;
+}
+
+.corner_option input {
+  margin: 0;
+  appearance: none;
+  font-size: inherit;
+  width: 0.8em;
+  height: 0.8em;
+  padding: 0;
+  border: 1px solid var(--text-color);
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.corner_option input:not(:checked) {
+  border-color: var(--text-color);
+  background: transparent;
+}
+
+.corner_option input:checked {
+  border-color: var(--text-color);
+  background:
+    linear-gradient(45deg, transparent 43%, var(--surface-color) 43% 53%, transparent 53%),
+    linear-gradient(-45deg, transparent 54%, var(--surface-color) 54% 64%, transparent 64%),
+    var(--text-color);
+}
+
+.dialog_backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 18%);
+  pointer-events: auto;
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  min-width: min(280px, calc(var(--project-viewport-width) * 0.8));
+  max-width: calc(var(--project-viewport-width) * 0.8);
+  max-height: calc(var(--project-viewport-height) * 0.8);
+  box-sizing: border-box;
+  color: var(--text-color);
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
+}
+
+.dialog_header,
+.dialog_footer {
+  display: flex;
+  flex: 0 0 52px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dialog_header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.dialog_close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dialog_body {
+  flex: 0 1 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px;
+  overflow: auto;
+}
+
+.dialog_footer {
+  border-top: 1px solid var(--border-color);
+  border-bottom: 0;
+}
+
+.dialog_options {
+  display: grid;
+  gap: 10px;
+  line-height: 1.15;
+}
+
+.dialog_option {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--text-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  font: inherit;
+  line-height: 1.15;
+}
+
+.dialog_option:focus-visible {
+  outline: 2px solid var(--text-color);
+  outline-offset: 3px;
+}
+
+.dialog_option:hover {
+  color: #000000;
+}
+
+.dialog_option input {
+  margin: 0;
+  appearance: none;
+  width: 0.9em;
+  height: 0.9em;
+  padding: 0;
+  border: 2px solid var(--text-color);
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dialog_option input:not(:checked) {
+  border-color: var(--text-color);
+  background: transparent;
+}
+
+.dialog_option input:checked {
+  border-color: var(--text-color);
+  background:
+    linear-gradient(45deg, transparent 43%, var(--surface-color) 43% 53%, transparent 53%),
+    linear-gradient(-45deg, transparent 54%, var(--surface-color) 54% 64%, transparent 64%),
+    var(--text-color);
+}

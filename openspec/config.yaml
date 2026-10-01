@@ -1,0 +1,25 @@
+schema: spec-driven
+context: |
+  Repository: github-repository-template, a reusable browser app/game template.
+  React and React DOM run through Vite with its React plugin. The repository
+  root is the npm root; project-name/ is the Vite application/source/test root.
+  Shared layout uses CSS pixels and a project-defined aspect-ratio viewport.
+  No game renderer is installed; engine guidance is comments/documentation only.
+  Add no runtime dependency without a concrete project requirement.
+  Preserve protected external links, version.txt sourcing, and fullscreen storage.
+  Commands from the repository root: npm ci, npm run dev, npm test, npm run build.
+  GitHub Pages uses /github-repository-template/ and project-name/dist/.
+  Canonical project documentation assets live in project-name/documentation/.
+  The template preserves only .agents/skills/.openspec-target; do not bundle
+  or hand-edit generated OpenSpec skills. Do not create a PR unless requested.
+rules:
+  proposal:
+    - Mark unresolved decisions clearly; recommendations are not approvals.
+    - State the affected user behavior and acceptance criteria.
+  design:
+    - Describe only architecture and technologies verified for this project.
+    - Preserve explicit boundaries between application layers or packages.
+  tasks:
+    - Keep planning, implementation, and verification tasks explicit.
+    - Include focused checks appropriate to the implemented change.
+
