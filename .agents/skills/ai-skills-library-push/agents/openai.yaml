@@ -1,0 +1,3 @@
+interface:
+  display_name: "AI Skills Library Push"
+  short_description: "Publish one global skill to the shared library"

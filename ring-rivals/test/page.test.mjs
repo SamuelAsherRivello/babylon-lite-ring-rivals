@@ -7,6 +7,9 @@ import { defaultLayout, fitViewport, validateLayout } from '../src/ui/layout.js'
 test('keeps npm/application and GitHub Pages roots', () => {
   assert.equal(viteConfig.root, 'ring-rivals');
   assert.equal(viteConfig.base, '/babylon-lite-ring-rivals/');
+  assert.equal(defaultLayout.orientation, 'landscape');
+  assert.equal(defaultLayout.width, 16);
+  assert.equal(defaultLayout.height, 9);
 });
 test('fits orientations and project-defined ratios in CSS pixels', () => {
   for (const layout of [defaultLayout, {orientation:'portrait',width:9,height:16}, {orientation:'square',width:1,height:1}, {orientation:'landscape',width:7,height:3}]) {
@@ -36,10 +39,11 @@ test('preserves corner contracts and Babylon Lite content-layer guidance', async
   for (const position of ['top_left','top_right','bottom_left','bottom_right']) assert.ok(app.includes('<Corner position="'+position+'">'));
   assert.match(app,/versionText.*trim/);
   assert.match(app,/noopener noreferrer/);
-  assert.match(app,/github-repository-template.fullscreen/);
+  assert.match(app,/babylon-lite-ring-rivals.fullscreen/);
+  assert.doesNotMatch(app,/portrait_checkbox|setOrientationOverride|key === "p"/);
   assert.match(surface,/Babylon Lite content mounts here/);
   assert.doesNotMatch(surface,/future Babylon Lite integration/i);
-  for (const term of ['Logical resolution','Internal render resolution','Canvas backing resolution','Display size','CSS size','fractional','StrictMode']) assert.ok(guide.includes(term));
+  for (const term of ['16:9 landscape','105 ms','authoritative on the server','?mute=1']) assert.ok(guide.includes(term));
   assert.doesNotMatch(surface,/import.*babylon/i);
 });
 test('keeps the UI and content source boundaries discoverable', async () => {
@@ -52,7 +56,7 @@ test('keeps the UI and content source boundaries discoverable', async () => {
   ]);
   assert.match(main, /\.\/ui\/App\.jsx/);
   assert.match(main, /\.\/content\/Content\.jsx/);
-  assert.match(main, /<App content=\{<Content \/>\} \/>/);
+  assert.match(main, /<App content=\{<>.*<Content \/>.*<RingRivalsGame \/>.*<\/>\} \/>/s);
   assert.match(template, /export function Template/);
   assert.match(content, /export function Content/);
   assert.match(standards, /src\/ui\//);

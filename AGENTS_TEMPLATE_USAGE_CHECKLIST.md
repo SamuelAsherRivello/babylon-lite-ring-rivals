@@ -17,6 +17,26 @@ reference-only requests, follow `AGENTS.md` and do not copy files.
       content and Babylon dependencies, including associated imports, tests,
       assets, and documentation that exist only for that content. Update the
       lockfile after dependency changes.
+- [ ] Choose **portrait** or **landscape** for the app or game concept before
+      implementation, based on its intended use and content. Use the matching
+      template viewport display, remove its orientation toggle, shortcut, and
+      persisted override, and implement only the chosen orientation. Do not
+      select square for a new app or game concept. Record the choice in project
+      documentation or implementation notes.
+- [ ] For a game, replace the Babylon showcase with the requested game; do not
+      mistake it for gameplay. Babylon Lite is WebGPU-only: show a clear
+      unsupported-browser message and do not add a fallback renderer. Implement
+      the requested scene and renderer setup, including for 3D. Use Pixel
+      Perfect for every 2D game, while choosing logical resolution and render
+      scale for that game.
+- [ ] Keep primary game content in the viewport so it works in windowed and
+      fullscreen modes. Keep the template gutter layout; secondary gutter
+      content such as instructions, design elements, or backstory is optional.
+      Choose whether and how game content scrolls to suit the game.
+- [ ] Game audio is optional and music is not recommended. If sound is
+      included, recommend 4 to 10 event-based sound effects and provide both a
+      UI mute toggle and a documented URL argument that mutes all sound for AI
+      testing.
 - [ ] For GitHub creation, use GitHub's **Use this template** flow when the user
       has authorized creating the destination. For a local copy, require an
       explicitly named destination and copy tracked files without `.git`,
@@ -41,10 +61,10 @@ copy:
 - [ ] For GitHub creation, verify `origin` points to the new project repository
       before pushing. For a local-only copy, do not invent or configure a
       remote.
-- [ ] Rename `project-name/`, update the Vite `root` setting, and replace
-      `{project-name}`, `{github-owner}`, and `{repository-name}` with confirmed
+- [ ] Rename `ring-rivals/`, update the Vite `root` setting, and replace
+      `{ring-rivals}`, `{github-owner}`, and `{repository-name}` with confirmed
       metadata before adding project-specific implementation.
-- [ ] Rename the README H1 (`# {project-name}`) and replace introduction,
+- [ ] Rename the README H1 (`# {ring-rivals}`) and replace introduction,
       getting-started, and project-details placeholders with concise, verified
       project information.
 - [ ] When the destination is on GitHub and settings are accessible, set its
@@ -78,7 +98,7 @@ the template are not evidence that a command exists in the new project.
       README. Do not document a command unless it exists and its configuration
       has been inspected.
 - [ ] Update `.gitignore` for generated outputs, local state, and secrets. Keep
-      the `node_modules/` and `project-name/dist/` exclusions if Node/Vite
+      the `node_modules/` and `ring-rivals/dist/` exclusions if Node/Vite
       remains.
 - [ ] Add a safe `.env.example` only if configuration is required; include no
       real credentials.
@@ -118,7 +138,7 @@ Perform this section only when OpenSpec is selected for the resulting project.
 
 ## 5. Delivery gate and summary
 
-- [ ] Search for `project-name`, `{github-owner}`, `{repository-name}`,
+- [ ] Search for `ring-rivals`, `{github-owner}`, `{repository-name}`,
       `{command}`, `{live-demo-url}`, `{demo_url}`,
       `github-repository-template`, `GitHub Repository Template`, and other
       template placeholders. Resolve or deliberately retain each occurrence
@@ -141,12 +161,12 @@ Perform this section only when OpenSpec is selected for the resulting project.
 ## 6. Template-use scorecard
 
 Answer each question **true** or **false** based on evidence in the resulting
-project. Award **+1 point for each true answer** (maximum 10 points).
+project. Award **+1 point for each true answer** (maximum 12 points).
 
 - [ ] Is the project purpose reflected in a renamed app folder instead of
-      leaving `project-name/` as the final application name?
+      leaving `ring-rivals/` as the final application name?
 - [ ] Does the Vite configuration point to the resulting app folder?
-- [ ] Have the project-name, owner, and repository placeholders been replaced
+- [ ] Have the ring-rivals, owner, and repository placeholders been replaced
       with confirmed values wherever applicable?
 - [ ] Does the README describe the actual project rather than the generic
       template?
@@ -156,6 +176,10 @@ project. Award **+1 point for each true answer** (maximum 10 points).
       been removed or adapted to the resulting project?
 - [ ] Does the app preserve or deliberately adapt the four HTML corner roles
       documented in `AGENTS.md`?
+- [ ] Does the project document and implement exactly one selected orientation
+      (portrait or landscape), with the orientation toggle removed?
+- [ ] If the game includes sound, does it provide a UI mute toggle and a URL
+      argument that mutes all sound?
 - [ ] Are React UI shortcuts kept clear of WASD, the arrow keys, Spacebar, and
       Enter, with assigned keys shown in the UI?
 - [ ] Does `.gitignore` cover the resulting project's generated files and

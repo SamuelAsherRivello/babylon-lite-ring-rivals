@@ -2,10 +2,15 @@ schema: spec-driven
 context: |
   Ring Rivals is an original online-only 1v1 boxing game built in React, Vite,
   and Babylon Lite, targeting WebGPU browsers and GitHub Pages. The repo root
-  is the npm root; project-name/ is the Vite app until renamed as part of setup.
+  is the npm root; ring-rivals/ is the Vite app.
   Preserve template four-corner UI roles, version.txt, protected links,
   fullscreen persistence, and Pixel Perfect rendering constraints. The chosen
-  game view is fixed landscape 4:3 with no user-facing orientation toggle.
+  game view is fixed landscape 16:9 with no orientation toggle, shortcut, or
+  persisted override. Replace the Babylon showcase with gameplay. Babylon Lite
+  is WebGPU-only; show a clear unsupported-browser error and do not add a
+  fallback renderer. This 2D game uses Pixel Perfect rendering and chooses its
+  own logical resolution and render scale. Audio is optional; this game uses
+  six original event sound effects, a mute control, and ?mute=1, with no music.
   Combat, match progression, and reconnect authority belong to the shared
   Colyseus service; browser clients render server state and send validated
   inputs. Online private invite rooms only; no local play, couch co-op, bots,
@@ -23,3 +28,4 @@ rules:
   tasks:
     - Keep planning, implementation, and verification tasks explicit.
     - Include focused checks appropriate to the implemented change.
+

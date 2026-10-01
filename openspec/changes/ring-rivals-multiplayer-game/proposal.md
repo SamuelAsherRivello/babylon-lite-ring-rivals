@@ -8,7 +8,8 @@ Create an original browser boxing game that brings the readable attack-and-count
 
 - Build an original 16-bit-style online 1v1 boxing game with two selectable original boxers.
 - Provide private invite rooms, authoritative real-time combat, reconnect grace, and best-of-three rounds.
-- Give each client its own boxer-from-behind view in a fixed landscape 4:3 frame; do not expose an orientation toggle.
+- Give each client its own boxer-from-behind view in a fixed landscape 16:9 frame; do not expose an orientation toggle.
+- Include six event-driven sound effects, an in-game mute control, and a documented `?mute=1` silent-testing option; include no music.
 - Deploy the browser client and its multiplayer service publicly, documenting setup, controls, and live play.
 - Use the reference pages for gameplay/presentation research only; do not reuse ROM data, code, branding, characters, or media.
 

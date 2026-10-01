@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Macro: Finalize, Sync, Archive, Commit, Push"
+  short_description: "Run ordered OpenSpec finalization skills"
+  default_prompt: "Use $openspec-macro-finalize-sync-archive-commit-push to finalize one completed OpenSpec change."

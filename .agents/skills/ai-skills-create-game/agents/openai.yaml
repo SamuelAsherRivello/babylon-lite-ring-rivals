@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Skills Create Game"
+  short_description: "Publish single-player or multiplayer browser games"
+  default_prompt: "Use $ai-skills-create-game to build and publish a game from my idea using the repository template, shared skills library, and GitHub Pages, defaulting to single player unless I request multiplayer."

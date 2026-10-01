@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Release Version"
+  short_description: "Release via GitHub Actions version workflows"
+  default_prompt: "Use $openspec-release-version to inspect and perform the repository release workflow."

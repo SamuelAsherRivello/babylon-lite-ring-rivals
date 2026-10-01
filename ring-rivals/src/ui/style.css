@@ -371,3 +371,74 @@ body {
     linear-gradient(-45deg, transparent 54%, var(--surface-color) 54% 64%, transparent 64%),
     var(--text-color);
 }
+
+/* Ring Rivals presentation: a fixed 16:9 arcade cabinet with crisp original boxers. */
+.game-shell {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 8% 65% 22% 5%;
+  overflow: hidden;
+  color: #f7e7c4;
+  background: #101728;
+  font-family: "Courier New", monospace;
+  image-rendering: pixelated;
+  --gold: #f3c953;
+  --ink: #171b2a;
+}
+
+.game-shell button, .game-shell input { font: inherit; }
+.game-shell button { color: #fff3cf; background: #9b352e; border: 2px solid #f3c953; padding: .55em .8em; cursor: pointer; box-shadow: 3px 3px 0 #111; }
+.game-shell button:hover:not(:disabled), .game-shell button.selected { background: #d56538; }
+.game-shell button:disabled { opacity: .5; cursor: not-allowed; }
+.game-topbar { display:flex; align-items:center; justify-content:space-between; padding: 0 2.5%; background:#161d31; border-bottom:3px solid #bd5039; letter-spacing:.08em; }
+.brand-mark { color:var(--gold); font-weight:900; font-size:clamp(13px,2vw,24px); }
+.brand-mark span { color:#fff0c2; font-size:.7em; margin-left:.5em; }
+.room-status { font-size:clamp(8px,1vw,13px); color:#91d4b0; }
+.mute-button { background:transparent!important; box-shadow:none!important; font-size:clamp(8px,1vw,12px); }
+.ring-stage { position:relative; isolation:isolate; overflow:hidden; background:linear-gradient(#2c4962 0 43%,#40404e 43% 68%,#b66d44 68% 100%); }
+.arena-sky { position:absolute; inset:0 0 47%; background:linear-gradient(#18263c,#48687a 75%,#704a50); z-index:-2; }
+.arena-crowd { position:absolute; top:34%; left:0; right:0; height:22%; opacity:.8; background:repeating-linear-gradient(90deg,#1d253a 0 8px,#32334a 8px 12px,#202b3c 12px 20px); clip-path:polygon(0 23%,100% 0,100% 100%,0 78%); z-index:-1; }
+.arena-scoreboard { position:absolute; z-index:2; top:3%; left:4%; right:4%; display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; padding:.6% 1%; border:3px solid #dcb858; background:#171a28ed; box-shadow:0 4px #742d2d; font-size:clamp(8px,1.25vw,15px); }
+.arena-scoreboard>div:not(.round-clock) { display:flex; gap:1em; align-items:center; }
+.arena-scoreboard .score-right { justify-content:flex-end; }
+.arena-scoreboard b { color:#f2cb61; }
+.round-clock { text-align:center; display:flex; flex-direction:column; min-width:6em; }
+.round-clock strong { font-size:1.8em; line-height:.9; color:#fff4d8; }
+.round-clock small { white-space:nowrap; font-size:.65em; }
+.ring-ropes { position:absolute; inset:48% 7% 4%; background:linear-gradient(180deg,#dbca9d 0 4%,#b98157 4% 100%); border:7px solid #fff1cf; box-shadow:inset 0 0 0 6px #be4f3b,0 9px #6c3740; }
+.ring-ropes i { position:absolute; left:0; right:0; height:4px; background:#f5e3bd; box-shadow:0 2px #a03839; }
+.ring-ropes i:nth-child(1){top:27%}.ring-ropes i:nth-child(2){top:55%}.ring-ropes i:nth-child(3){top:83%}
+.stage-boxers { position:absolute; inset:26% 10% 0; pointer-events:none; }
+.pixel-boxer { position:absolute; bottom:0; left:50%; width:clamp(90px,18%,220px); transform:translate(calc(-50% + var(--fighter-x, 0%)),0); transform-origin:50% 100%; transition:transform 50ms linear,filter 45ms linear; image-rendering:pixelated; filter:drop-shadow(5px 5px 0 #18182777); }
+.pixel-boxer svg { display:block; width:100%; height:auto; }
+.pixel-boxer.opponent { width:clamp(130px,27%,330px); bottom:20%; z-index:1; }
+.pixel-boxer.foreground { z-index:3; }
+.pixel-boxer.foreground svg { transform:scaleY(1.12); }
+.pixel-boxer.action-dodge-left { --fighter-x:-1!important; }.pixel-boxer.action-dodge-right { --fighter-x:1!important; }
+.pixel-boxer.action-attack-jab-head svg { transform:translateX(-8%) scale(1.03); }
+.pixel-boxer.action-attack-cross-head svg { transform:translateX(8%) scale(1.04); }
+.pixel-boxer.hit-flash { filter:brightness(2.3) drop-shadow(5px 5px 0 #18182777); }
+.fighter-name { display:block; text-align:center; color:#fff0c2; font-size:clamp(8px,1vw,13px); text-shadow:2px 2px #171827; }
+.fighter-placeholder { position:absolute; bottom:12%; left:50%; transform:translateX(-50%); color:#fff1c2; font-size:clamp(8px,1vw,12px); }
+.fight-call { position:absolute; z-index:5; inset:42% 0 auto; text-align:center; color:#ffe778; font-weight:900; font-size:clamp(20px,5vw,56px); text-shadow:4px 4px #722f40; }
+.game-controls { position:relative; display:grid; place-items:center; overflow:auto; padding:.5% 2%; background:#151a2a; border-top:4px solid #ddba58; }
+.lobby-card { max-width:80%; text-align:center; font-size:clamp(8px,1.15vw,14px); }
+.lobby-card h1 { margin:.1em; font-size:clamp(18px,3vw,36px); color:var(--gold); }
+.lobby-card p { margin:.45em; }
+.eyebrow { color:#f1884b; font-weight:bold; letter-spacing:.12em; }
+.lobby-actions,.lobby-ready,.boxer-select { display:flex; justify-content:center; align-items:center; gap:1em; }
+.lobby-actions label { display:grid; gap:.25em; font-size:.75em; color:#e0c982; }
+.lobby-actions input { width:8em; padding:.55em; text-transform:uppercase; color:white; background:#242c40; border:1px solid #bfa953; }
+.lobby-ready { margin-top:.5em; flex-wrap:wrap; }
+.boxer-select { gap:.35em; }
+.connection-error { color:#ff9988; }
+.fight-controls { width:100%; }
+.move-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:.5%; }
+.move-grid button { padding:.6em .2em; font-size:clamp(7px,.95vw,12px); }
+.fight-foot { display:flex; justify-content:space-between; align-items:center; padding-top:.55em; color:#d7c9a5; font-size:clamp(7px,.8vw,10px); }
+.fight-foot button { padding:.35em .6em; }
+.game-footer { display:flex; justify-content:space-between; align-items:center; padding:0 3%; color:#c6b78e; background:#111624; font-size:clamp(7px,.8vw,10px); }
+.game-footer span { color:#f5cb5d; font-weight:bold; }
+@media (max-width:700px) { .arena-scoreboard { left:2%; right:2%; gap:.2rem; padding:1% .5%; }.arena-scoreboard>div:not(.round-clock){gap:.3em}.move-grid{grid-template-columns:repeat(4,1fr)}.game-shell{grid-template-rows:7% 61% 27% 5%}.lobby-actions{gap:.4em}.lobby-card{max-width:96%} }

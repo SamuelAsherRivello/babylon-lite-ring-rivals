@@ -1,7 +1,7 @@
 // Change these presets to update the template's supported aspect ratios in one place.
 // Layout dimensions are CSS pixels; renderer resolution and DPR belong to a future integration.
 export const aspectRatioPresets = Object.freeze({
-  landscape: Object.freeze({ width: 4, height: 3, label: "4:3" }),
+  landscape: Object.freeze({ width: 16, height: 9, label: "16:9" }),
 });
 
 export const defaultLayout = Object.freeze({

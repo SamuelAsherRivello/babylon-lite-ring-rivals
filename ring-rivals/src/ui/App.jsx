@@ -14,7 +14,7 @@ import { ViewportInfoContext } from "./ViewportInfoContext.jsx";
 
 const configStorageKey = "babylon-lite-ring-rivals.config";
 const fullscreenStorageKey = "babylon-lite-ring-rivals.fullscreen";
-const defaultConfig = Object.freeze({ fullscreen: false, hudVisible: true, renderPreset: "native" });
+const defaultConfig = Object.freeze({ fullscreen: false, hudVisible: false, renderPreset: "native" });
 const repositoryUrl = "https://github.com/SamuelAsherRivello/babylon-lite-ring-rivals";
 
 function readConfig() {

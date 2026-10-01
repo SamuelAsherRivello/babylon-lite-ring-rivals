@@ -6,10 +6,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test --test-isolation=none ring-rivals/test/page.test.mjs ring-rivals/test/content.test.mjs ring-rivals/test/openspec-skills.test.mjs"
+    "test": "node --test --test-isolation=none ring-rivals/test/page.test.mjs ring-rivals/test/content.test.mjs ring-rivals/test/openspec-skills.test.mjs ring-rivals/test/motion-smoothing.test.mjs"
   },
   "dependencies": {
     "@babylonjs/lite": "1.32.0",
+    "@rmc/multiplayer-client": "https://github.com/SamuelAsherRivello/rmc-colyseus-multiplayer-server/releases/download/v0.9.3/rmc-multiplayer-client-0.9.3.tgz",
     "@vitejs/plugin-react": "^6.1.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

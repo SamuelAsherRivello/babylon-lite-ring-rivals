@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Commit Inclusive"
+  short_description: "Commit one archived OpenSpec change"
+  default_prompt: "Use $openspec-commit-inclusive to commit one archived OpenSpec proposal."

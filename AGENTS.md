@@ -1,79 +1,26 @@
-# AI Repository Guidance
+# Ring Rivals Repository Guidance
 
-## Repository purpose and scope
+## Project requirements
 
-This repository is a reusable browser app/game template. When a user asks to
-use it, first identify the requested mode:
+- This repository is an original online-only 1v1 boxing game. Do not add local play, couch co-op, AI opponents, public matchmaking, accounts, rankings, or persistent match history.
+- Keep the local boxer small in the foreground and seen from behind; render the remote boxer larger and facing the local player. Each client independently maps the same server-authoritative match to its own view.
+- Select one orientation before implementation. This game is landscape; use the template's landscape viewport, remove orientation toggle/shortcut/persisted override, and do not provide another orientation or a layout for both.
+- Replace the Babylon pixel-art showcase with actual gameplay. Babylon Lite is WebGPU-only; show a clear unsupported-browser message and do not use a fallback renderer. This 2D game uses Pixel Perfect rendering and chooses its own logical resolution and render scale.
+- Keep primary play UI inside the viewport in windowed and fullscreen use. Preserve the four corner roles: title upper left, project links upper right, settings lower left, version lower right. Gutter content is optional and secondary.
+- Audio in this game is limited to six original event-driven effects, with visible mute and documented `?mute=1` silence for testing; do not add music or borrowed audio.
+- Multiplayer state, combat, scoring, timers, disconnects, and outcomes are server-authoritative. Never trust client-supplied position, damage, health, or result fields.
+- Use only original character designs, names, artwork, code, and sound. Supplied Punch-Out reference links are research only.
 
-1. **New GitHub repository:** Use GitHub's **Use this template** flow when
-   authorized. The destination repository is a new project; do not push
-   project-specific work to this template.
-2. **Local project copy:** Copy the tracked template files into the explicitly
-   named destination, excluding `.git` and its history. Do not create a
-   destination the user did not identify.
-3. **Reference only:** Inspect this repository as inspiration. Copy no files
-   unless the user separately asks for a copy.
+## Repository layout and implementation
 
-For either new-project mode, follow
-[the template usage checklist](AGENTS_TEMPLATE_USAGE_CHECKLIST.md). Resolve
-any mismatch between the requested mode and repository configuration before
-copying or creating a destination. Do not treat reference-only use as permission
-to copy.
+- The npm project is at the repository root; the Vite app, source, tests, assets, and project documentation are in `ring-rivals/`.
+- Keep React components and styles under `ring-rivals/src/ui/`; game content and renderer code under `ring-rivals/src/content/`.
+- Babylon Lite is the selected renderer. Verify engine APIs against the pinned package declarations. Do not introduce Babylon.js or WebGL.
+- Preserve template protected external links, version.txt sourcing, fullscreen persistence, and GitHub Pages base-path handling.
+- Do not assign React shortcuts to WASD, arrows, Space, or Enter; display assigned shortcuts in the UI.
+- Use OpenSpec for behavior changes. Keep accepted specs synchronized when finalizing the change.
+- Do not create pull requests unless the user explicitly asks.
 
-When establishing a new project, determine whether the user wants a game or an
-app. For a game, keep the Babylon content and dependencies as the starting
-point and adapt them to the requested game. For an app, remove Babylon content
-and dependencies, along with associated imports, tests, assets, and docs used
-only by that content; update the lockfile after dependency changes.
+## Commands
 
-## Repository and application layout
-
-- The repository root is the npm project root and contains `.git`, package
-  configuration, and repository metadata. Run Git, dependency, build, test,
-  and run commands from this root unless the resulting project's inspected
-  configuration says otherwise.
-- `project-name/` is the Vite application root. Keep app source, tests, and
-  assets there unless the chosen stack deliberately changes the layout.
-- Project documentation assets belong in `project-name/documentation/`.
-- Keep `project-name/` as the Vite root and synchronize the GitHub repository
-  URL with the resulting project repository when this template baseline is
-  retained.
-
-## React code and styles
-
-- Do not leave dead code or dead styles. Remove unused React components,
-  imports, variables, CSS selectors, and custom properties when they are no
-  longer used.
-- When changing React UI, check that its JSX class names and IDs match the
-  styles, and remove obsolete selectors left behind by the change.
-- The page structure supports keeping the full HUD visible inside the viewport
-  during fullscreen. Gutters are not visible in fullscreen, so custom gutter UI
-  may be added only as secondary UI. Keep all primary UI in React and within
-  the viewport.
-
-## HTML template corner roles
-
-The default HTML template uses four reusable `corner` instances inside
-`ui_layer`. Preserve these roles when adapting the template:
-
-- Upper left: project title.
-- Upper right: project links.
-- Lower right: project version.
-- Lower left: project settings.
-
-Format content in each corner using either the menu title style or the menu
-body style. Represent boolean settings with checkboxes.
-
-## OpenSpec setup
-
-The template preserves `.agents/skills/.openspec-target` but does not bundle
-generated OpenSpec skills. When the resulting project requires OpenSpec, follow
-the authoritative setup and verification procedure in
-[the template usage checklist](AGENTS_TEMPLATE_USAGE_CHECKLIST.md#openspec-setup-when-required).
-Do not hand-edit generated OpenSpec skills.
-
-## Pull request workflow
-
-Do not create a pull request unless the user explicitly asks for one in the
-current request. A push, commit, or completed template/OpenSpec workflow does
-not imply approval to create a pull request.
+Run from repository root: `npm ci`, `npm run dev`, `npm test`, and `npm run build`. Verify visible game behavior in a real browser, including two independent online clients, portrait and landscape browser surfaces, WebGPU errors, and public deployment.

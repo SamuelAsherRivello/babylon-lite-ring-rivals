@@ -33,7 +33,7 @@ The game SHALL provide exactly two original, visually distinct boxer choices. Ei
 - **THEN** the match remains in the lobby until both have selected a boxer and readied
 
 ### Requirement: Each client receives its own opponent-focused view
-The game SHALL render the local boxer smaller in the foreground from behind and the remote boxer larger and facing the local player. The online view SHALL use a fixed landscape 4:3 playfield without a user-facing orientation toggle.
+The game SHALL render the local boxer smaller in the foreground from behind and the remote boxer larger and facing the local player. The online view SHALL use a fixed landscape 16:9 playfield without a user-facing orientation toggle, shortcut, or persisted override.
 
 #### Scenario: Player one views the match
 - **WHEN** player one is in a bout
@@ -59,7 +59,7 @@ Each player SHALL be able to use readable head and body punches, guard, and evas
 - **THEN** the server ignores or rejects it without accepting client-supplied positions, damage, health, or match results
 
 ### Requirement: The server owns shared combat and match outcomes
-The server SHALL authoritatively simulate both players' validated inputs, boxer state, attacks, defense, damage, health, stamina, round timer, score, and match phase. Clients SHALL render and interpolate server state without deciding hits or changing outcomes.
+The server SHALL authoritatively simulate both players' validated inputs, boxer state, attacks, defense, damage, health, stamina, round timer, score, and match phase. Clients SHALL render server state without deciding hits or changing outcomes.
 
 #### Scenario: Both clients observe the same result
 - **WHEN** an attack hits, is guarded, or is evaded
@@ -68,6 +68,21 @@ The server SHALL authoritatively simulate both players' validated inputs, boxer 
 #### Scenario: Late join cannot take over a bout
 - **WHEN** a third client attempts to join an active two-player room
 - **THEN** the server rejects that client as full and leaves the bout unchanged
+
+### Requirement: Boxer motion renders smoothly between server updates
+Clients SHALL use local input prediction and timestamped remote-state interpolation or equivalent smoothing so both boxers move smoothly between authoritative snapshots. Corrections SHALL converge to server state without changing combat outcomes.
+
+#### Scenario: Local boxer responds between snapshots
+- **WHEN** the local player presses a movement or evasion control between server snapshots
+- **THEN** the local boxer begins moving immediately and reconciles to authoritative state as updates arrive
+
+#### Scenario: Remote boxer moves between snapshots
+- **WHEN** two or more timestamped snapshots arrive for the opponent
+- **THEN** the client interpolates the displayed opponent pose between snapshots rather than stepping abruptly at each update
+
+#### Scenario: Prediction disagrees with authority
+- **WHEN** a predicted pose differs from the server's authoritative pose
+- **THEN** the client smoothly corrects the displayed pose while the server's combat and match result remain authoritative
 
 ### Requirement: Matches use best-of-three timed rounds
 An online match SHALL use a short ready countdown and best-of-three rounds. A knockout SHALL end the current round; when time expires, the boxer with more remaining health SHALL win that round. An exact health tie SHALL draw the round without changing score. The match SHALL end when a boxer wins two rounds, or as a draw after three rounds if neither has won twice.
@@ -116,3 +131,14 @@ The game SHALL use original 16-bit pixel-art boxers, ring, UI, effects, and audi
 #### Scenario: Render the match on desktop and mobile
 - **WHEN** the game is opened on a desktop or narrow mobile viewport
 - **THEN** the full fixed-landscape client view, essential HUD, and controls remain usable without stretching the playfield
+
+### Requirement: Game sound is controllable
+The game SHALL provide six original event-driven sound effects, a visible mute control, and a `?mute=1` URL option that mutes all game sound. It SHALL NOT play music.
+
+#### Scenario: Player mutes game sound
+- **WHEN** a player activates the mute control
+- **THEN** all event sounds stop until the player unmutes them
+
+#### Scenario: Silent browser testing
+- **WHEN** the game is opened with the `mute=1` query parameter
+- **THEN** all game sound stays muted without user interaction

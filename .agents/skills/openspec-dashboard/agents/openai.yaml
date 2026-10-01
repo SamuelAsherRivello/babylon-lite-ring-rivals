@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Dashboard"
+  short_description: "Open and inspect the local OpenSpecUI dashboard"
+  default_prompt: "Use $openspec-dashboard to open or inspect the local OpenSpecUI dashboard, checking and setting up dependencies if needed."

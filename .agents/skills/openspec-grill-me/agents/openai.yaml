@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSpec Grill Me"
+  short_description: "Interview for an OpenSpec plan"
+  default_prompt: "Use $openspec-grill-me to interview me about an OpenSpec plan."
