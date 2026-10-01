@@ -6,9 +6,9 @@ import { defineConfig } from "vite";
 const repositoryRoot = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  base: "/github-repository-template/",
+  base: "/babylon-lite-ring-rivals/",
   plugins: [react()],
-  root: "project-name",
+  root: "ring-rivals",
   server: {
     fs: {
       allow: [repositoryRoot],

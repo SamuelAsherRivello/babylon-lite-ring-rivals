@@ -5,8 +5,8 @@ import viteConfig from '../../vite.config.js';
 import { defaultLayout, fitViewport, validateLayout } from '../src/ui/layout.js';
 
 test('keeps npm/application and GitHub Pages roots', () => {
-  assert.equal(viteConfig.root, 'project-name');
-  assert.equal(viteConfig.base, '/github-repository-template/');
+  assert.equal(viteConfig.root, 'ring-rivals');
+  assert.equal(viteConfig.base, '/babylon-lite-ring-rivals/');
 });
 test('fits orientations and project-defined ratios in CSS pixels', () => {
   for (const layout of [defaultLayout, {orientation:'portrait',width:9,height:16}, {orientation:'square',width:1,height:1}, {orientation:'landscape',width:7,height:3}]) {

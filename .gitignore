@@ -2,7 +2,7 @@
 
 # Node and Vite output.
 node_modules/
-/project-name/dist/
+/ring-rivals/dist/
 
 # Local configuration. Commit examples only, never credentials.
 .env

@@ -1,12 +1,12 @@
 {
-  "name": "github-repository-template",
+  "name": "babylon-lite-ring-rivals",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test --test-isolation=none project-name/test/page.test.mjs project-name/test/content.test.mjs project-name/test/openspec-skills.test.mjs"
+    "test": "node --test --test-isolation=none ring-rivals/test/page.test.mjs ring-rivals/test/content.test.mjs ring-rivals/test/openspec-skills.test.mjs"
   },
   "dependencies": {
     "@babylonjs/lite": "1.32.0",
