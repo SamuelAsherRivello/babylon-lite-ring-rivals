@@ -3,7 +3,7 @@ import { MultiplayerClient } from "@rmc/multiplayer-client";
 import { SnapshotInterpolator, predictLocalPose, reconcilePose } from "./motion-smoothing.js";
 import { Content } from "../Content.jsx";
 
-const ENDPOINT = import.meta.env.VITE_MULTIPLAYER_ENDPOINT || "https://rmc-colyseus-multiplayer-server.vercel.app";
+const ENDPOINT = import.meta.env.VITE_MULTIPLAYER_URL || import.meta.env.VITE_MULTIPLAYER_ENDPOINT || "https://rmc-colyseus-multiplayer-server.vercel.app";
 const ACTIONS = [
   ["jab-head", "JAB · HEAD"], ["cross-head", "CROSS · HEAD"], ["jab-body", "JAB · BODY"], ["cross-body", "CROSS · BODY"],
   ["guard-high", "HIGH GUARD"], ["guard-low", "LOW GUARD"], ["dodge-left", "DODGE LEFT"], ["dodge-right", "DODGE RIGHT"],
@@ -96,10 +96,13 @@ function FighterStage({ state, sessionId, localIntent }) {
 
 export function RingRivalsGame() {
   const [state, setState] = useState({ status: "idle", players: [], gameState: null, error: "", code: "" });
-  const [invite, setInvite] = useState("");
+  const [invite, setInvite] = useState(() => new URLSearchParams(location.search).get("room")?.toUpperCase().slice(0, 4) ?? "");
+  const [shareMessage, setShareMessage] = useState("");
   const [boxer, setBoxer] = useState("rook");
   const [muted, setMuted] = useState(() => new URLSearchParams(location.search).get("mute") === "1");
   const sessionRef = useRef(null);
+  const sessionUnsubscribeRef = useRef(null);
+  const inviteAutoconnectStartedRef = useRef(false);
   const localIntent = useRef(null);
   const sequence = useRef(0);
   const previousState = useRef(null);
@@ -107,8 +110,8 @@ export function RingRivalsGame() {
   useEffect(() => {
     const session = new MultiplayerClient(ENDPOINT, "ring-rivals");
     sessionRef.current = session;
-    const unsubscribe = session.subscribe((next) => setState({ ...next, players: [...(next.players ?? [])] }));
-    return () => { unsubscribe(); session.disconnect(); sessionRef.current = null; };
+    sessionUnsubscribeRef.current = session.subscribe((next) => setState({ ...next, players: [...(next.players ?? [])] }));
+    return () => { sessionUnsubscribeRef.current?.(); sessionUnsubscribeRef.current = null; sessionRef.current?.disconnect(); sessionRef.current = null; };
   }, []);
 
   useEffect(() => {
@@ -191,14 +194,34 @@ export function RingRivalsGame() {
     session.send("input", { action, sequence: sequence.current++ });
     window.setTimeout(() => { if (localIntent.current?.startedAt === now && !action.startsWith("guard")) localIntent.current = null; }, action.startsWith("dodge") ? 420 : 520);
   };
-  const connect = (create) => {
-    const code = invite.trim().toUpperCase();
-    const session = new MultiplayerClient(ENDPOINT, "ring-rivals", create ? { create: true } : { code });
+  const connect = (create, roomCode = invite) => {
+    const code = roomCode.trim().toUpperCase();
+    const session = new MultiplayerClient(ENDPOINT, "ring-rivals", create ? { create: true, ...(code ? { code } : {}) } : { code });
+    sessionUnsubscribeRef.current?.();
     sessionRef.current?.disconnect();
     sessionRef.current = session;
-    session.subscribe((next) => setState({ ...next, players: [...(next.players ?? [])] }));
+    sessionUnsubscribeRef.current = session.subscribe((next) => setState({ ...next, players: [...(next.players ?? [])] }));
     void session.connect();
   };
+  const copyInvite = async () => {
+    const code = state.code || state.gameState?.code;
+    if (!code) return;
+    const url = new URL(location.href);
+    url.searchParams.set("room", code);
+    try { await navigator.clipboard.writeText(url.href); setShareMessage("ROOM LINK COPIED"); }
+    catch { setShareMessage(`SHARE CODE ${code}`); }
+  };
+  useEffect(() => {
+    const code = new URLSearchParams(location.search).get("room")?.trim().toUpperCase();
+    if (!/^[A-Z0-9]{4}$/.test(code ?? "")) return;
+    let active = true;
+    const timer = window.setTimeout(() => {
+      if (!active || inviteAutoconnectStartedRef.current) return;
+      inviteAutoconnectStartedRef.current = true;
+      connect(false, code);
+    }, 0);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, []);
   const localSeat = state.players.find((player) => player.id === state.sessionId)?.seat;
   const myFighter = localSeat == null ? null : state.gameState?.players?.[localSeat];
   const selectBoxer = (value) => { setBoxer(value); sessionRef.current?.send("select", { boxer: value }); };
@@ -209,9 +232,9 @@ export function RingRivalsGame() {
     <section className="game-controls">
       {state.status === "reconnecting" ? <div className="lobby-card" role="status"><p className="eyebrow">ROOM {state.code || state.roomId}</p><h1>RECOVERING YOUR SEAT</h1><p>{state.error || "The connection dropped. Rejoining your bout…"}</p></div>
       : state.status !== "connected" ? <div className="lobby-card"><p className="eyebrow">ONLINE ARCADE BOXING · 2 PLAYERS</p><h1>STEP INTO THE RING</h1><p>Create a private bout, then send the room code to your rival.</p>
-        <div className="lobby-actions"><button onClick={() => connect(true)}>CREATE PRIVATE ROOM</button><label>ROOM CODE<input value={invite} onChange={(event) => setInvite(event.target.value.toUpperCase().slice(0, 6))} maxLength={6} placeholder="6 LETTER CODE" /></label><button disabled={invite.trim().length !== 6} onClick={() => connect(false)}>JOIN BOUT</button></div>
+        <div className="lobby-actions"><button onClick={() => connect(true, invite.trim().toUpperCase())}>CREATE PRIVATE ROOM</button><label>ROOM CODE<input value={invite} onChange={(event) => setInvite(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4))} maxLength={4} placeholder="4 CHARACTER CODE" /></label><button disabled={invite.trim().length !== 4} onClick={() => connect(false)}>JOIN BOUT</button></div>
         {state.error && <p className="connection-error" role="status">{state.error}</p>}
-      </div> : !state.gameState || state.gameState.phase === "lobby" ? <div className="lobby-card"><p className="eyebrow">ROOM {state.code || state.roomId} · {state.players.length}/2 BOXERS</p><h1>CHOOSE YOUR BOXER</h1><p>Share this private room code with your rival.</p><div className="lobby-ready"><div className="boxer-select"><button className={(myFighter?.boxer ?? boxer) === "rook" ? "selected" : ""} onClick={() => selectBoxer("rook")}>ROOK</button><button className={(myFighter?.boxer ?? boxer) === "flash" ? "selected" : ""} onClick={() => selectBoxer("flash")}>FLASH</button></div><button disabled={state.players.length < 2 || myFighter?.ready} onClick={() => sessionRef.current?.send("ready")}>{myFighter?.ready ? "WAITING FOR RIVAL…" : "READY TO FIGHT"}</button></div></div> : <div className="fight-controls"><div className="move-grid">{ACTIONS.map(([action, title]) => <button key={action} onPointerDown={(event) => { event.preventDefault(); sendAction(action); }} onPointerUp={() => { if (action.startsWith("guard")) sendAction("neutral"); }} onPointerCancel={() => sendAction("neutral")}>{title}</button>)}</div><div className="fight-foot">Keyboard: Z/X head punches · A/S body punches · ↑/↓ guard · ←/→ dodge <button onClick={() => sessionRef.current?.send(state.gameState.phase === "matchover" ? "rematch" : "ready")}>{state.gameState.phase === "matchover" ? "REMATCH" : "READY"}</button></div></div>}
+      </div> : !state.gameState || state.gameState.phase === "lobby" ? <div className="lobby-card"><p className="eyebrow">ROOM {state.code || state.roomId} · {state.players.length}/2 BOXERS</p><h1>CHOOSE YOUR BOXER</h1><p>Share this private room code with your rival.</p><div className="lobby-ready"><div className="boxer-select"><button className={(myFighter?.boxer ?? boxer) === "rook" ? "selected" : ""} onClick={() => selectBoxer("rook")}>ROOK</button><button className={(myFighter?.boxer ?? boxer) === "flash" ? "selected" : ""} onClick={() => selectBoxer("flash")}>FLASH</button></div><button disabled={state.players.length < 2 || myFighter?.ready} onClick={() => sessionRef.current?.send("ready")}>{myFighter?.ready ? "WAITING FOR RIVAL…" : "READY TO FIGHT"}</button></div><button onClick={copyInvite}>COPY ROOM LINK</button><p role="status">{shareMessage}</p></div> : <div className="fight-controls"><div className="move-grid">{ACTIONS.map(([action, title]) => <button key={action} onPointerDown={(event) => { event.preventDefault(); sendAction(action); }} onPointerUp={() => { if (action.startsWith("guard")) sendAction("neutral"); }} onPointerCancel={() => sendAction("neutral")}>{title}</button>)}</div><div className="fight-foot">Keyboard: Z/X head punches · A/S body punches · ↑/↓ guard · ←/→ dodge <button onClick={() => sessionRef.current?.send(state.gameState.phase === "matchover" ? "rematch" : "ready")}>{state.gameState.phase === "matchover" ? "REMATCH" : "READY"}</button></div></div>}
     </section>
     <footer className="game-footer">ROOK · COUNTER PUNCHER <span>1–2–3, FIGHT!</span> FLASH · SPEED BOXER</footer>
   </main>;

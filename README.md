@@ -27,7 +27,7 @@ Each screen keeps its own point of view: your boxer appears smaller in the foreg
 
 Matches use best-of-three 60-second rounds. A knockout ends the round; otherwise higher remaining health wins. Equal health draws the round. A dropped client can recover its seat for 15 seconds; the round clock pauses during recovery. Rooms and matches are temporary and may reset during server deployments.
 
-The live demo uses the shared Colyseus service at `https://rmc-colyseus-multiplayer-server.vercel.app`. It has no accounts or persistent rankings. Add `?mute=1` to the demo URL for a silent session.
+The live demo uses the shared Colyseus service at `https://rmc-colyseus-multiplayer-server.vercel.app`. Set `VITE_MULTIPLAYER_URL` to target another server deployment; `VITE_MULTIPLAYER_ENDPOINT` remains a compatible alias. It has no accounts or persistent rankings. Add `?mute=1` to the demo URL for a silent session.
 
 ### Rendering and original artwork
 
@@ -44,7 +44,7 @@ npm test
 npm run build
 ```
 
-The game uses the pinned `@rmc/multiplayer-client` 0.9.3 GitHub Release package. The authoritative server validates actions, timing, health, stamina, rounds, and match outcomes. The client buffers timestamped snapshots for remote interpolation, predicts local dodge motion immediately, and eases visual correction back to server state.
+The game uses the pinned `@rmc/multiplayer-client` 0.9.7 GitHub Release package. The authoritative server validates actions, timing, health, stamina, rounds, and match outcomes. The client buffers timestamped snapshots for remote interpolation, predicts local dodge motion immediately, and eases visual correction back to server state.
 
 ## Project Layout
 
