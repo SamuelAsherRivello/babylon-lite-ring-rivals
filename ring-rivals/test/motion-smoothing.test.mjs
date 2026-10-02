@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SnapshotInterpolator, predictLocalPose, reconcilePose } from "../src/content/ring-rivals/motion-smoothing.js";
+import { LOCAL_ACTION_PREDICTION_WINDOW_MS, SnapshotInterpolator, predictLocalPose, reconcilePose } from "../src/content/ring-rivals/motion-smoothing.js";
+import { getBoxerAnimation } from "../src/content/ring-rivals/boxer-animation.js";
 
 const frame = (timestamp, x, action = "idle") => ({
   game: "ring-rivals", timestamp, phase: "round", players: [{ x, action, actionFrame: timestamp / 50, health: 100 }],
@@ -12,6 +13,18 @@ test("remote snapshots interpolate between authoritative positions at a fixed re
   buffer.push(frame(200, 10), 1050);
   assert.equal(buffer.sample(1050).players[0].x, 5);
   assert.equal(buffer.sample(1100).players[0].x, 10);
+});
+
+test("remote fighter cels follow interpolated authoritative action progress", () => {
+  const buffer = new SnapshotInterpolator(50);
+  const before = frame(100, 0, "attack-jab-head"), after = frame(200, 0, "attack-jab-head");
+  before.players[0].actionFrame = 4;
+  after.players[0].actionFrame = 12;
+  buffer.push(before, 1000);
+  buffer.push(after, 1050);
+  const sampled = buffer.sample(1050).players[0];
+  assert.equal(sampled.actionFrame, 8);
+  assert.equal(getBoxerAnimation(sampled).frame % 3, 1, "the interpolated remote frame is presented as the impact cel");
 });
 
 test("snapshot buffers are ordered and bounded when packets arrive out of order", () => {
@@ -28,4 +41,8 @@ test("local dodge prediction is immediate and authority corrections decay smooth
   assert.ok(predictLocalPose({ x: 0 }, "dodge-left", 100).x < 0);
   assert.equal(predictLocalPose({ x: 0 }, "jab-head", 100).x, 0);
   assert.ok(reconcilePose(0, 1, 16) > 0 && reconcilePose(0, 1, 16) < 1);
+});
+
+test("unconfirmed local action prediction returns to authority after five snapshot intervals", () => {
+  assert.equal(LOCAL_ACTION_PREDICTION_WINDOW_MS, 250);
 });

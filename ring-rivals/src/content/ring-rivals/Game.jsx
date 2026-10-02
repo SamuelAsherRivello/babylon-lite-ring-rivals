@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MultiplayerClient } from "@rmc/multiplayer-client";
-import { SnapshotInterpolator, predictLocalPose, reconcilePose } from "./motion-smoothing.js";
+import { LOCAL_ACTION_PREDICTION_WINDOW_MS, SnapshotInterpolator, predictLocalPose, reconcilePose } from "./motion-smoothing.js";
 import { Content } from "../Content.jsx";
 
 const ENDPOINT = import.meta.env.VITE_MULTIPLAYER_URL || import.meta.env.VITE_MULTIPLAYER_ENDPOINT || "https://rmc-colyseus-multiplayer-server.vercel.app";
@@ -61,10 +61,21 @@ function FighterStage({ state, sessionId, localIntent }) {
             : fighter;
           const smoothedX = reconcilePose(lastVisualX.current[seat], predicted.x, elapsed);
           lastVisualX.current[seat] = smoothedX;
-          const visualAction = intent && now - intent.startedAt < 500
-            ? (intent.action.includes("-") && intent.action.startsWith("jab") || intent.action.startsWith("cross") ? `attack-${intent.action}` : intent.action)
-            : fighter.action;
-          return { ...fighter, action: local ? visualAction : fighter.action, displayX: smoothedX };
+          const rawIntent = intent?.action ?? "";
+          const visualAction = rawIntent.startsWith("jab-") || rawIntent.startsWith("cross-")
+            ? `attack-${rawIntent}` : rawIntent;
+          const predictedFrame = intent ? Math.floor(Math.max(0, now - intent.startedAt) * 0.03) : 0;
+          const predictionWindow = LOCAL_ACTION_PREDICTION_WINDOW_MS;
+          if (intent && fighter.action === visualAction) intent.acknowledged = true;
+          const predict = local && intent && !intent.acknowledged && now - intent.startedAt < predictionWindow;
+          return {
+            ...fighter,
+            action: local ? (predict ? visualAction : fighter.action) : fighter.action,
+            actionFrame: fighter.actionFrame,
+            predictedAction: predict ? visualAction : null,
+            predictedFrame,
+            displayX: smoothedX,
+          };
         });
         setFrame({ ...sampled, players, localSeat });
       }
@@ -190,9 +201,11 @@ export function RingRivalsGame() {
     const session = sessionRef.current;
     if (!session || state.status !== "connected") return;
     const now = performance.now();
-    localIntent.current = { action, startedAt: now };
+    localIntent.current = { action, startedAt: now, acknowledged: false };
     session.send("input", { action, sequence: sequence.current++ });
-    window.setTimeout(() => { if (localIntent.current?.startedAt === now && !action.startsWith("guard")) localIntent.current = null; }, action.startsWith("dodge") ? 420 : 520);
+    if (!action.startsWith("guard")) {
+      window.setTimeout(() => { if (localIntent.current?.startedAt === now) localIntent.current = null; }, LOCAL_ACTION_PREDICTION_WINDOW_MS + 50);
+    }
   };
   const connect = (create, roomCode = invite) => {
     const code = roomCode.trim().toUpperCase();

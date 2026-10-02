@@ -25,6 +25,7 @@ import { getInitializationMessage } from "./babylon/initialization.js";
 import { getLogicalToRenderScale } from "./babylon/pixel-perfect.js";
 import { createRenderTargetSurfaceView, getRenderResolutionDimensions } from "./babylon/render-resolution.js";
 import { useViewportInfo } from "../ui/ViewportInfoContext.jsx";
+import { BOXER_ATLAS, getBoxerAnimation } from "./ring-rivals/boxer-animation.js";
 
 const BACKGROUND = Object.freeze({ r: 0, g: 0, b: 0, a: 0 });
 
@@ -233,10 +234,10 @@ function PixelPerfectBoxingScene({ fighters, localSeat }) {
         }
 
         atlas = createGridSpriteAtlas(texture, {
-          cellWidthPx: 64,
-          cellHeightPx: 128,
-          columns: 4,
-          rows: 1,
+          cellWidthPx: BOXER_ATLAS.cellWidth,
+          cellHeightPx: BOXER_ATLAS.cellHeight,
+          columns: BOXER_ATLAS.columns,
+          rows: BOXER_ATLAS.rows,
           pivot: [0.5, 0.5],
         });
         layer = createSprite2DLayer(atlas, { pivot: [0.5, 0.5] });
@@ -255,16 +256,11 @@ function PixelPerfectBoxingScene({ fighters, localSeat }) {
             const actor = actors[drawOrder];
             const local = seat === (ownSeat ?? 0);
             const fighter = current?.[seat] ?? { boxer: seat === 0 ? "rook" : "flash", action: "idle", displayX: 0 };
-            const frame = (local ? 0 : 2) + (fighter.boxer === "flash" ? 1 : 0);
-            const dodge = fighter.action?.startsWith("dodge-")
-              ? (fighter.action.endsWith("left") ? -14 : 14)
-              : (fighter.displayX ?? 0) * 18;
-            const attacking = fighter.action?.startsWith("attack-");
-            const punch = attacking ? (fighter.action.includes("cross") ? 12 : -8) : 0;
+            const pose = getBoxerAnimation(fighter, { local, view: local ? "rear" : "front", timeMs: performance.now() });
             updateSprite2D(actor, {
-              positionPx: [dodge + punch, local ? 38 : -28],
-              sizePx: local ? [attacking ? 58 : 52, 104] : [attacking ? 84 : 76, 152],
-              frame,
+              positionPx: [pose.offsetX, (local ? 38 : -28) + pose.offsetY],
+              sizePx: [pose.sizeX, pose.sizeY],
+              frame: pose.frame,
               color: fighter.hitFlash ? [1, 0.65, 0.65, 1] : [1, 1, 1, 1],
             });
           });

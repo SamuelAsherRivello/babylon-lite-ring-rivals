@@ -1,5 +1,6 @@
 const DEFAULT_BUFFER_MS = 110;
 const MAX_SNAPSHOTS = 12;
+export const LOCAL_ACTION_PREDICTION_WINDOW_MS = 250;
 
 function mix(a, b, amount) {
   return a + (b - a) * amount;

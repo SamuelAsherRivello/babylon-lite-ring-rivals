@@ -157,7 +157,7 @@ test('reports WebGPU-only initialization and allocation failures and uses the en
     /disposeSpriteAtlas\(atlas\)/,
   ]) assert.match(content, expression);
   assert.match(content, /await createEngine\(canvas, pixelPerfectOptions\.engine\)/);
-  assert.match(content, /createGridSpriteAtlas\(texture,\s*\{\s*cellWidthPx: 64,\s*cellHeightPx: 128,\s*columns: 4,\s*rows: 1/);
+  assert.match(content, /createGridSpriteAtlas\(texture,\s*\{\s*cellWidthPx: BOXER_ATLAS.cellWidth,\s*cellHeightPx: BOXER_ATLAS.cellHeight,\s*columns: BOXER_ATLAS.columns,\s*rows: BOXER_ATLAS.rows/);
   assert.match(content, /queueMicrotask\(\(\) => \{\s*if \(!cancelled\) void setup\(\);\s*\}\)/);
   assert.match(content, /if \(!navigator\.gpu\) throw new Error\("WebGPU is not available in this browser\."\)/);
   assert.match(content, /setMessage\(`\$\{getInitializationMessage\(Boolean\(navigator\.gpu\), error\)\}/);
@@ -214,7 +214,7 @@ test('ships original pixel boxer and arena atlases at the documented logical siz
     readFile(new URL('../src/content/ring-rivals/Game.jsx', import.meta.url), 'utf8'),
   ]);
   assert.deepEqual([...boxers.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-  assert.deepEqual([boxers.readUInt32BE(16), boxers.readUInt32BE(20)], [256, 128]);
+  assert.deepEqual([boxers.readUInt32BE(16), boxers.readUInt32BE(20)], [704, 1536]);
   assert.deepEqual([arena.readUInt32BE(16), arena.readUInt32BE(20)], [480, 180]);
   assert.match(config, /logicalResolution = Object\.freeze\(\{ width: 480, height: 180 \}\)/);
   assert.match(game, /state\.status === "reconnecting"[\s\S]*RECOVERING YOUR SEAT/);

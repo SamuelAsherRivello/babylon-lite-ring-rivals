@@ -10,9 +10,14 @@ The server runs simulation at 30 Hz and broadcasts timestamped full snapshots at
 
 The local client predicts dodge pose immediately from the player's input. It only predicts presentation; hit resolution, health, stamina, action acceptance, and match results remain authoritative on the server. Once snapshots arrive, the renderer eases visual offsets toward the interpolated server pose instead of snapping. `ring-rivals/test/motion-smoothing.test.mjs` covers interpolation, reordered and bounded snapshots, immediate dodge response, and easing.
 
+## Boxer action animation
+
+Both boxers hold fixed horizontal anchors. Rook and Flash each have original generated pixel-art cels for the rear/local and front/opponent views across idle, head and body jab/cross, high and low guard, left and right dodge, block, and hit-stun. Idle has a slow three-cel breathing loop. Attack cels follow server action frames through windup, impact, and recovery; local input starts a predicted pose immediately and hands over when the authoritative action arrives. Head and body attacks use distinct target poses; punches lean into the strike, body shots dip, dodges sway briefly, and hit reactions recoil. Each offset is computed relative to the same anchor and settles to zero at idle. Opponent action frames use the existing interpolated snapshots. The animation affects presentation only; the server retains attack timing, target, range, guards, evasion, and damage rules.
+ing-rivals/test/boxer-animation.test.mjs checks clip coverage, perspective mapping, fixed anchors, temporary offsets, and predicted-to-authoritative timing.
+
 ## Online protocol and game flow
 
-The client uses `https://rmc-colyseus-multiplayer-server.vercel.app` unless `VITE_MULTIPLAYER_ENDPOINT` overrides the endpoint for development. The server package and its room protocol are documented in the multiplayer server's `@rmc/multiplayer-client` release README. Two clients share a six-character private room code, independently select either original boxer, and ready before the match begins. A round lasts 60 seconds; the server pauses the clock while a disconnected player attempts same-seat recovery for up to 15 seconds.
+The client uses `https://rmc-colyseus-multiplayer-server.vercel.app` unless `VITE_MULTIPLAYER_URL` (or its `VITE_MULTIPLAYER_ENDPOINT` alias) overrides the endpoint for development. Two clients share a four-character private room code, independently select either original boxer, and ready before the match begins. A round lasts 60 seconds; the server pauses the clock while a disconnected player attempts same-seat recovery for up to 15 seconds. The current public server still needs the compatible private-room release before these four-character links are available on the live demo.
 
 Controls work with keyboard (`Z`, `X`, `A`, `S`, arrows), touch action buttons, and standard gamepad face/shoulder/D-pad or left-stick inputs. Focus loss sends neutral input. Six generated Web Audio cues are event-driven; the UI mute control and `?mute=1` support silent play. The experience includes no music.
 
@@ -20,4 +25,4 @@ Controls work with keyboard (`Z`, `X`, `A`, `S`, arrows), touch action buttons, 
 
 The project is a 2D game, so the template's Pixel Perfect direction applies: use nearest sampling, no mipmaps, and no multisampling for any game sprites rendered through Babylon Lite. Select logical and internal render resolution based on the game viewport; preserve the 16:9 camera framing as browser dimensions change. Babylon Lite initialization requires WebGPU and must present an actionable error when the browser cannot provide it.
 
-The current lobby screenshot is `documentation/screenshot01.png`. Build and run from repository root with `npm ci`, `npm run dev`, `npm test`, and `npm run build`.
+The current match screenshot is `documentation/screenshot01.png`. Build and run from repository root with `npm ci`, `npm run dev`, `npm test`, and `npm run build`.
